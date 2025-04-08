@@ -195,7 +195,7 @@ export class SiYuanAI implements INodeType {
 				typeOptions: { multipleValues: true },
 				required: true,
 				default: {},
-				displayOptions: { show: { operation: ['setBlockAttrs'] } },
+				// displayOptions: { show: { operation: ['setBlockAttrs'] } }, // Temporarily removed for testing
 				description: 'Attributes to set (key-value pairs). Custom attributes must start with "custom-".',
 				options: [
 					{
