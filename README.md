@@ -1,46 +1,78 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-siyuan
 
-# n8n-nodes-starter
+This is an n8n community node package. It lets you interact with the [SiYuan](https://b3log.org/siyuan/) personal knowledge management system API within your n8n workflows.
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](n8n.io). It includes the node linter and other dependencies.
+SiYuan is a privacy-first, self-hosted personal knowledge management system with a block-based editor and bidirectional linking capabilities.
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-## Prerequisites
+[Installation](#installation)  
+[Operations](#operations)  
+[Credentials](#credentials)  
+[Compatibility](#compatibility)  
+[Resources](#resources)  
 
-You need the following installed on your development machine:
+## Installation
 
-* [git](https://git-scm.com/downloads)
-* Node.js and pnpm. Minimum version Node 18. You can find instructions on how to install both using nvm (Node Version Manager) for Linux, Mac, and WSL [here](https://github.com/nvm-sh/nvm). For Windows users, refer to Microsoft's guide to [Install NodeJS on Windows](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows).
-* Install n8n with:
-  ```
-  pnpm install n8n -g
-  ```
-* Recommended: follow n8n's guide to [set up your development environment](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
+Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-## Using this starter
+Search for `n8n-nodes-siyuan` (Note: This is the assumed package name based on `package.json`, adjust if different upon publishing).
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+## Operations
 
-1. [Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template repository.
-2. Clone your new repo:
-   ```
-   git clone https://github.com/<your organization>/<your-repo-name>.git
-   ```
-3. Run `pnpm i` to install dependencies.
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `pnpm lint` to check for errors or `pnpm lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
+The `SiYuan AI` node provides the following operations:
 
-## More information
+*   **Document Operations:**
+    *   Create Document
+    *   Rename Document
+    *   Remove Document
+    *   Move Document
+    *   Get Document ID by Path
+    *   Get Document Path by ID
+*   **Block Operations:**
+    *   Append Block
+    *   Prepend Block
+    *   Insert Block
+    *   Update Block
+    *   Delete Block
+    *   Get Block Kramdown
+*   **Attribute Operations:**
+    *   Set Block Attributes
+    *   Get Block Attributes
+*   **SQL Operations:**
+    *   Execute SQL Query
+*   **Template Operations:**
+    *   Render Sprig Template
+*   **Notification Operations:**
+    *   Push Message
+    *   Push Error Message
+*   **System Operations:**
+    *   Get Version
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+## Credentials
 
-## License
+To use this node, you need to configure the `SiYuan API` credentials:
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+1.  **Prerequisites:**
+    *   Have SiYuan running and accessible from your n8n instance.
+    *   Enable the API in SiYuan (Settings -> About -> API Token). Note down the API Token and the API Server address (usually `http://127.0.0.1:6806` if running locally).
+2.  **Setup in n8n:**
+    *   Go to the 'Credentials' section in your n8n instance.
+    *   Click 'Add credential'.
+    *   Search for 'SiYuan API' and select it.
+    *   Enter a name for your credential (e.g., "My Local SiYuan").
+    *   Fill in the `SiYuan API URL` (e.g., `http://127.0.0.1:6806`).
+    *   Paste your SiYuan `API Token` into the corresponding field.
+    *   Save the credential.
+
+## Compatibility
+
+*   Minimum n8n version: (Specify based on testing, likely >= 1.0)
+*   Tested n8n versions: (Specify versions tested during development)
+*   SiYuan API: Tested against SiYuan version (Specify SiYuan version if known, based on API docs used)
+
+## Resources
+
+*   [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+*   [SiYuan User Guide](https://b3log.org/siyuan/en/guide) (Includes API information)
+*   [SiYuan API Documentation Files](./SiYuan-API-Doc-part1.txt), [Part 2](./SiYuan-API-Doc-part2.txt), [Part 3](./SiYuan-API-Doc-part3.txt) (Included in this repository)
