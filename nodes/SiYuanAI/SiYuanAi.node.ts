@@ -262,186 +262,65 @@ export class SiYuanAI implements INodeType {
 				displayOptions: { show: { operation: ['pushMsg', 'pushErrMsg'] } },
 				description: 'Duration to display the message (in milliseconds)',
 			},
+			// --- Temporarily removed all other properties for debugging ---
 		],
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		// --- Temporarily commented out execute body for debugging ---
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		const length = items.length;
+		// const length = items.length;
 
-		// Get credentials
-		const credentials = await this.getCredentials('siYuanApi');
-		const apiUrl = credentials.apiUrl as string;
-		const apiToken = credentials.apiToken as string;
+		// // Get credentials
+		// const credentials = await this.getCredentials('siYuanApi');
+		// const apiUrl = credentials.apiUrl as string;
+		// const apiToken = credentials.apiToken as string;
 
-		if (!apiUrl || !apiToken) {
-			throw new NodeOperationError(this.getNode(), 'Credentials missing!', { itemIndex: 0 });
-		}
+		// if (!apiUrl || !apiToken) {
+		// 	throw new NodeOperationError(this.getNode(), 'Credentials missing!', { itemIndex: 0 });
+		// }
 
-		const client = new SiYuanClient(apiUrl, apiToken);
+		// const client = new SiYuanClient(apiUrl, apiToken);
 
-		for (let itemIndex = 0; itemIndex < length; itemIndex++) {
-			try {
-				const operation = this.getNodeParameter('operation', itemIndex) as string;
-				let result: any; // Use 'any' for simplicity, refine later if needed
+		// for (let itemIndex = 0; itemIndex < length; itemIndex++) {
+		// 	try {
+		// 		const operation = this.getNodeParameter('operation', itemIndex) as string;
+		// 		let result: any; // Use 'any' for simplicity, refine later if needed
 
-				switch (operation) {
-					// --- Document Operations ---
-					case 'createDoc': {
-						const notebookId = this.getNodeParameter('notebookId', itemIndex) as string;
-						const docPath = this.getNodeParameter('docPath', itemIndex) as string;
-						const markdownContent = this.getNodeParameter('markdownContent', itemIndex) as string;
-						result = await client.createDocWithMd(notebookId, docPath, markdownContent);
-						break;
-					}
-					case 'renameDoc': {
-						const docId = this.getNodeParameter('docId', itemIndex) as string;
-						const newTitle = this.getNodeParameter('newTitle', itemIndex) as string;
-						result = await client.renameDocByID(docId, newTitle);
-						break;
-					}
-					case 'removeDoc': {
-						const docId = this.getNodeParameter('docId', itemIndex) as string;
-						result = await client.removeDocByID(docId);
-						break;
-					}
-					case 'moveDoc': {
-						// Assuming single item processing for simplicity
-						const docId = this.getNodeParameter('docId', itemIndex) as string;
-						const targetParentId = this.getNodeParameter('targetParentId', itemIndex) as string;
-						result = await client.moveDocsByID([docId], targetParentId); // Pass docId as array
-						break;
-					}
-					case 'getDocIdByPath': {
-						const notebookId = this.getNodeParameter('notebookId', itemIndex) as string;
-						const docPath = this.getNodeParameter('docPath', itemIndex) as string;
-						result = await client.getIDsByHPath(docPath, notebookId);
-						break;
-					}
-					case 'getDocPathById': {
-						const docId = this.getNodeParameter('docId', itemIndex) as string;
-						result = await client.getHPathByID(docId);
-						break;
-					}
+		// 		// Simplified switch or remove entirely for testing
+		// 		switch (operation) {
+		// 			case 'getVersion': {
+		// 				result = await client.getVersion();
+		// 				break;
+		// 			}
+		// 			default:
+		// 				result = { message: `Operation '${operation}' selected, but execution is disabled for debugging.` };
+		// 				// throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`, { itemIndex });
+		// 		}
 
-					// --- Block Operations ---
-					case 'appendBlock': {
-						const parentBlockId = this.getNodeParameter('parentBlockId', itemIndex) as string;
-						const blockData = this.getNodeParameter('blockData', itemIndex) as string;
-						result = await client.appendBlock(parentBlockId, blockData);
-						break;
-					}
-					case 'prependBlock': {
-						const parentBlockId = this.getNodeParameter('parentBlockId', itemIndex) as string;
-						const blockData = this.getNodeParameter('blockData', itemIndex) as string;
-						result = await client.prependBlock(parentBlockId, blockData);
-						break;
-					}
-					case 'insertBlock': {
-						const parentBlockId = this.getNodeParameter('parentBlockId', itemIndex) as string;
-						const blockData = this.getNodeParameter('blockData', itemIndex) as string;
-						const previousBlockId = this.getNodeParameter('previousBlockId', itemIndex, '') as string | undefined;
-						const nextBlockId = this.getNodeParameter('nextBlockId', itemIndex, '') as string | undefined;
-						result = await client.insertBlock(blockData, 'markdown', previousBlockId || undefined, nextBlockId || undefined, parentBlockId);
-						break;
-					}
-					case 'updateBlock': {
-						const blockId = this.getNodeParameter('blockId', itemIndex) as string;
-						const blockData = this.getNodeParameter('blockData', itemIndex) as string;
-						result = await client.updateBlock(blockId, blockData);
-						break;
-					}
-					case 'deleteBlock': {
-						const blockId = this.getNodeParameter('blockId', itemIndex) as string;
-						result = await client.deleteBlock(blockId);
-						break;
-					}
-					case 'getBlockKramdown': {
-						const blockId = this.getNodeParameter('blockId', itemIndex) as string;
-						result = await client.getBlockKramdown(blockId);
-						break;
-					}
 
-					// --- Attribute Operations ---
-					case 'setBlockAttrs': {
-						const blockId = this.getNodeParameter('blockId', itemIndex) as string;
-						const attributesRaw = this.getNodeParameter('attributes', itemIndex) as { attributeValues: Array<{ name: string; value: string }> };
-						const attrs: Record<string, string> = {};
-						if (attributesRaw.attributeValues) {
-							for (const pair of attributesRaw.attributeValues) {
-								if (pair.name) { // Ensure name is not empty
-									attrs[pair.name] = pair.value;
-								}
-							}
-						}
-						result = await client.setBlockAttrs(blockId, attrs);
-						break;
-					}
-					case 'getBlockAttrs': {
-						const blockId = this.getNodeParameter('blockId', itemIndex) as string;
-						result = await client.getBlockAttrs(blockId);
-						break;
-					}
+		// 		// Structure the output data
+		// 		const executionData = this.helpers.constructExecutionMetaData(
+		// 			this.helpers.returnJsonArray(result === null ? { success: true } : result), // Handle null results
+		// 			{ itemData: { item: itemIndex } },
+		// 		);
+		// 		returnData.push(...executionData);
 
-					// --- SQL Operations ---
-					case 'sqlQuery': {
-						const sqlStatement = this.getNodeParameter('sqlStatement', itemIndex) as string;
-						result = await client.sqlQuery(sqlStatement);
-						break;
-					}
+		// 	} catch (error) {
+		// 		if (this.continueOnFail()) {
+		// 			const executionErrorData = this.helpers.constructExecutionMetaData(
+		// 				this.helpers.returnJsonArray({ error: error.message }),
+		// 				{ itemData: { item: itemIndex } },
+		// 			);
+		// 			returnData.push(...executionErrorData);
+		// 			continue;
+		// 		}
+		// 		throw error; // Rethrow if not continuing on fail
+		// 	}
+		// }
 
-					// --- Template Operations ---
-					case 'renderSprig': {
-						const sprigTemplate = this.getNodeParameter('sprigTemplate', itemIndex) as string;
-						result = await client.renderSprig(sprigTemplate);
-						break;
-					}
-
-					// --- Notification Operations ---
-					case 'pushMsg': {
-						const message = this.getNodeParameter('message', itemIndex) as string;
-						const timeout = this.getNodeParameter('timeout', itemIndex) as number;
-						result = await client.pushMsg(message, timeout);
-						break;
-					}
-					case 'pushErrMsg': {
-						const message = this.getNodeParameter('message', itemIndex) as string;
-						const timeout = this.getNodeParameter('timeout', itemIndex) as number;
-						result = await client.pushErrMsg(message, timeout);
-						break;
-					}
-
-					// --- System Operations ---
-					case 'getVersion': {
-						result = await client.getVersion();
-						break;
-					}
-
-					default:
-						throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`, { itemIndex });
-				}
-
-				// Structure the output data
-				const executionData = this.helpers.constructExecutionMetaData(
-					this.helpers.returnJsonArray(result === null ? { success: true } : result), // Handle null results
-					{ itemData: { item: itemIndex } },
-				);
-				returnData.push(...executionData);
-
-			} catch (error) {
-				if (this.continueOnFail()) {
-					const executionErrorData = this.helpers.constructExecutionMetaData(
-						this.helpers.returnJsonArray({ error: error.message }),
-						{ itemData: { item: itemIndex } },
-					);
-					returnData.push(...executionErrorData);
-					continue;
-				}
-				throw error; // Rethrow if not continuing on fail
-			}
-		}
-
+		// Return empty data for now
 		return this.prepareOutputData(returnData);
 	}
 }
