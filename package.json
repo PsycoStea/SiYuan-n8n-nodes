@@ -1,6 +1,6 @@
 {
-  "name": "siyuan-n8n-node",
-  "version": "0.1.0",
+  "name": "n8n-nodes-siyuan",
+  "version": "0.1.1",
   "description": "n8n nodes for siyuan",
   "keywords": [
     "n8n-community-node-package"
