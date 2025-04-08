@@ -3,10 +3,10 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	NodeOperationError,
+	// NodeOperationError, // Removed as execute body is commented out
 } from 'n8n-workflow';
 
-import { SiYuanClient } from '../../lib/SiYuanClient'; // Adjust path as needed
+// import { SiYuanClient } from '../../lib/SiYuanClient'; // Removed as execute body is commented out
 
 export class SiYuanAI implements INodeType {
 	description: INodeTypeDescription = {
@@ -265,12 +265,12 @@ export class SiYuanAI implements INodeType {
 			// --- Temporarily removed all other properties for debugging ---
 		],
 	};
+async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+	// --- Temporarily commented out execute body for debugging ---
+	// const items = this.getInputData(); // Removed unused variable
+	const returnData: INodeExecutionData[] = [];
+	// const length = items.length;
 
-	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		// --- Temporarily commented out execute body for debugging ---
-		const items = this.getInputData();
-		const returnData: INodeExecutionData[] = [];
-		// const length = items.length;
 
 		// // Get credentials
 		// const credentials = await this.getCredentials('siYuanApi');
