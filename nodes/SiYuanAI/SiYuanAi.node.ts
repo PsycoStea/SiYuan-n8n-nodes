@@ -195,7 +195,7 @@ export class SiYuanAI implements INodeType {
 				typeOptions: { multipleValues: true },
 				required: true,
 				default: {},
-				// displayOptions: { show: { operation: ['setBlockAttrs'] } }, // Temporarily removed for testing
+				displayOptions: { show: { operation: ['setBlockAttrs'] } },
 				description: 'Attributes to set (key-value pairs). Custom attributes must start with "custom-".',
 				options: [
 					{
@@ -269,9 +269,9 @@ export class SiYuanAI implements INodeType {
 		// --- Temporarily commented out execute body for debugging ---
 		// const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		// const length = items.length; // Also commented out
+		// const length = items.length;
 
-		// // // Get credentials
+		// // Get credentials
 		// const credentials = await this.getCredentials('siYuanApi');
 		// const apiUrl = credentials.apiUrl as string;
 		// const apiToken = credentials.apiToken as string;
