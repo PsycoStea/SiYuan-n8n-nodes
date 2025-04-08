@@ -59,7 +59,7 @@ export class SiYuanAI implements INodeType {
 					{ name: 'Update Block', value: 'updateBlock' },
 				],
 				default: 'createDoc', // Default remains the same
-
+				description: 'The SiYuan operation to perform',
 			},
 
 			// --- Parameters for Operations (Conditional Display) ---
