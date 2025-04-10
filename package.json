@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-siyuan",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "n8n nodes for siyuan",
   "keywords": [
     "n8n-community-node-package"
@@ -20,10 +20,9 @@
     "pnpm": ">=9.1"
   },
   "packageManager": "pnpm@9.1.4",
-  "main": "dist/nodes/SiYuanAI/SiYuanAi.node.js",
   "scripts": {
   	"preinstall": "npx only-allow pnpm",
-    "build": "tsc && gulp build:icons",
+  	"build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
