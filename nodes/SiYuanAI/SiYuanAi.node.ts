@@ -61,6 +61,8 @@ export class SiYuanAI implements INodeType {
 				default: 'createDoc', // Default remains the same
 
 			},
+			/*
+			// --- Temporarily commented out conditional properties for debugging ---
 
 			// --- Parameters for Operations (Conditional Display) ---
 
@@ -262,6 +264,7 @@ export class SiYuanAI implements INodeType {
 				displayOptions: { show: { operation: ['pushMsg', 'pushErrMsg'] } },
 				description: 'Duration to display the message (in milliseconds)',
 			},
+			*/
 		],
 	};
 
