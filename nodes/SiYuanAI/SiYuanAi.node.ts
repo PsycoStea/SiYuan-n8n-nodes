@@ -10,8 +10,8 @@ import { SiYuanClient } from '../../lib/SiYuanClient'; // Adjust path as needed
 
 export class SiYuanAI implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'SiYuan AI',
-		name: 'siYuanAi',
+		displayName: 'SiYuan', // Renamed
+		name: 'siYuanAi', // Internal name remains the same
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-icon-not-svg
 		icon: 'file:siyuanai.svg', // Placeholder - icon needs to be created
 		group: ['ai', 'productivity'], // Assuming 'ai' group exists or adjust as needed
@@ -19,7 +19,7 @@ export class SiYuanAI implements INodeType {
 		subtitle: '={{$parameter[\"operation\"]}}',
 		description: 'Interacts with the SiYuan API using selected operations',
 		defaults: {
-			name: 'SiYuan AI',
+			name: 'SiYuan', // Renamed default
 		},
 		inputs: ['main'],
 		outputs: ['main'],

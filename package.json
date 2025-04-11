@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-siyuan",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "n8n nodes for siyuan",
   "keywords": [
     "n8n-community-node-package"
@@ -21,8 +21,8 @@
   },
   "packageManager": "pnpm@9.1.4",
   "scripts": {
-  	"preinstall": "npx only-allow pnpm",
-  	"build": "tsc && gulp build:icons",
+    "preinstall": "npx only-allow pnpm",
+    "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
@@ -46,9 +46,9 @@
     ]
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^7.15.0",
-    "eslint": "^8.56.0",
-    "eslint-plugin-n8n-nodes-base": "^1.16.1",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-n8n-nodes-base": "^1.16.3",
     "gulp": "^4.0.2",
     "prettier": "^3.3.2",
     "typescript": "^5.5.3"
@@ -57,6 +57,18 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
-    "axios": "^1.8.4"
+    "axios": "^1.8.4",
+    "n8n-nodes-siyuan": "file:C:/Users/mbate/OneDrive/VS Code/Custom N8N nodes - SiYuan/n8n"
+  },
+  "pnpm": {
+    "overrides": {
+      "cross-spawn": ">=7.0.5",
+      "axios": ">=1.8.4",
+      "decode-uri-component": ">=0.2.1",
+      "braces": ">=3.0.3",
+      "micromatch": ">=4.0.8",
+      "es5-ext": ">=0.10.63",
+      "semver": ">=5.7.2"
+    }
   }
 }
