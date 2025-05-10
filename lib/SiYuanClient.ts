@@ -196,6 +196,73 @@ export class SiYuanClient {
 		return this.request<string>('/api/system/version');
 	}
 
+	// --- File/Directory Operations ---
+
+	async listDocsInNotebook(notebookId: string): Promise<ListedDocument[]> {
+		const constructedPath = `/data/${notebookId}`;
+		const entries = await this.request<SiYuanDirEntry[]>('/api/file/readDir', { path: constructedPath });
+
+		const documents: ListedDocument[] = [];
+		if (entries && Array.isArray(entries)) {
+			for (const entry of entries) {
+				if (!entry.isDir && entry.name.endsWith('.sy')) {
+					const docId = entry.name.replace(/\.sy$/, '');
+					let title = docId; // Default title to ID
+					try {
+						const attrs = await this.getBlockAttrs(docId);
+						if (attrs && typeof attrs.title === 'string' && attrs.title) {
+							title = attrs.title;
+						}
+					} catch (e) {
+						// Log error or handle if needed, but continue to list the doc
+						// console.warn(`Could not fetch attributes for doc ${docId}: ${(e as Error).message}`);
+					}
+					documents.push({
+						id: docId,
+						name: entry.name, // Full filename
+						title: title, // Human-readable title
+						updated: entry.updated,
+						isDir: entry.isDir,
+						isSymlink: entry.isSymlink,
+					});
+				}
+			}
+		}
+		return documents;
+	}
+
+	// --- Notebook Operations ---
+
+	async listNotebooks(): Promise<SiYuanNotebookInfo[]> {
+		const response = await this.request<{ notebooks: SiYuanNotebookInfo[] }>('/api/notebook/lsNotebooks', {});
+		return response.notebooks || []; // Ensure an array is returned even if notebooks is null/undefined
+	}
+
 	// Add other methods as needed based on SiYuan API documentation...
-	// e.g., listNotebooks, getNotebookConf, exportMdContent, etc.
+	// e.g., getNotebookConf, exportMdContent, etc.
+}
+
+// Helper interfaces
+interface SiYuanDirEntry {
+	isDir: boolean;
+	isSymlink: boolean;
+	name: string;
+	updated: number; // Unix timestamp
+}
+
+export interface ListedDocument { // Export if it needs to be used by the node for typing return values
+	id: string;
+	name: string; // Filename e.g. 20230101120000-abcdefg.sy
+	title: string; // Human-readable title from block attributes
+	updated: number;
+	isDir: boolean; // Included for completeness from SiYuanDirEntry, though will be false for docs
+	isSymlink: boolean; // Included for completeness
+}
+
+export interface SiYuanNotebookInfo { // Export if it needs to be used by the node for typing return values
+	id: string;
+	name: string; // This is the human-readable name
+	icon: string;
+	sort: number;
+	closed: boolean;
 }

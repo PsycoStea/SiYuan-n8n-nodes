@@ -47,6 +47,8 @@ This package provides a single, comprehensive `SiYuan` node. You can select the 
     *   Move Document
     *   Get Document ID by Path
     *   Get Document Path by ID
+    *   List Documents in Notebook (includes titles)
+    *   List Notebooks
 *   **Block Manipulation:**
     *   Append Block
     *   Prepend Block
@@ -113,6 +115,9 @@ The possibilities are broad when combining n8n's AI capabilities with direct SiY
 
 ## Version History
 
+*   **`0.3.0`** (2025-05-10)
+    *   Added "List Documents in Notebook" operation (fetches document titles).
+    *   Added "List Notebooks" operation.
 *   **`0.2.1`** (Planned) - README updates.
 *   **`0.2.0`** (2025-05-10)
     *   Major refactor: Consolidated all functionality into a single `SiYuan` node with an operation selector.

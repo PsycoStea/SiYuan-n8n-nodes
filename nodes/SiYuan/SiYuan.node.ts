@@ -50,6 +50,8 @@ export class SiYuan implements INodeType {
 					{ name: 'Get Document ID by Path', value: 'getDocIdByPath', description: 'Find the document ID based on its human-readable path (HPath)', action: 'Find the document id based on its human readable path h path'},
 					{ name: 'Get Document Path by ID', value: 'getDocPathById', description: 'Get the human-readable path (HPath) of a document by its ID', action: 'Get the human readable path h path of a document by its id'},
 					{ name: 'Get Version', value: 'getVersion', description: 'Get the SiYuan system version', action: 'Get the si yuan system version'},
+					{ name: 'List Documents in Notebook', value: 'listDocsInNotebook', description: 'Lists all documents within a specified notebook.', action: 'List documents in notebook'},
+					{ name: 'List Notebooks', value: 'listNotebooks', description: 'Lists all available notebooks.', action: 'List notebooks'},
 					{ name: 'Insert Block', value: 'insertBlock', description: 'Insert a Markdown/DOM block relative to another block', action: 'Insert a markdown dom block relative to another block'},
 					{ name: 'Move Document', value: 'moveDoc', description: 'Move a document to another parent (notebook or document)', action: 'Move a document to another parent notebook or document'},
 					{ name: 'Prepend Block', value: 'prependBlock', description: 'Prepend Markdown/DOM block to a parent block', action: 'Prepend markdown dom block to a parent block'},
@@ -74,7 +76,7 @@ export class SiYuan implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath'] } },
+				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath', 'listDocsInNotebook'] } },
 				description: 'ID of the target notebook',
 			},
 			{
@@ -325,6 +327,15 @@ export class SiYuan implements INodeType {
 					case 'getDocPathById': {
 						const docId = this.getNodeParameter('docId', itemIndex) as string;
 						result = await client.getHPathByID(docId);
+						break;
+					}
+					case 'listDocsInNotebook': {
+						const notebookId = this.getNodeParameter('notebookId', itemIndex) as string;
+						result = await client.listDocsInNotebook(notebookId);
+						break;
+					}
+					case 'listNotebooks': {
+						result = await client.listNotebooks();
 						break;
 					}
 
