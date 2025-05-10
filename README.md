@@ -37,7 +37,6 @@ Alternatively, follow the generic [installation guide](https://docs.n8n.io/integ
 This package provides a single, comprehensive `SiYuan` node. You can select the desired action using the **Operation** dropdown within the node.
 
 ![SiYuan Node Example](./siyuan-image.png)
-*(Ensure siyuan-image.png is in the n8n directory of your repository)*
 
 **Supported Operations:**
 
@@ -89,7 +88,7 @@ To interact with your SiYuan instance, you'll need to configure the `SiYuan API`
 
 The SiYuan node is designed for direct interaction with the API via clearly defined parameters for each operation. This makes it highly versatile for various automation tasks.
 
-**Using with AI Agents in n8n:**
+**Using AI Agents in n8n:**
 
 While this node itself doesn't perform AI functions, it can be a powerful downstream component for AI-driven workflows in n8n:
 
@@ -128,8 +127,6 @@ Contributions, issues, and feature requests are welcome! Please feel free to che
 
 ---
 
-*If you want to display your Star History, you can generate an SVG/image from [star-history.com](https://star-history.com/) and embed it here. For example:*
-`[![Star History Chart](https://api.star-history.com/svg?repos=PsycoStea/SiYuan-n8n-nodes&type=Timeline)](https://www.star-history.com/#PsycoStea/SiYuan-n8n-nodes&Timeline)`
-*(The `<iframe>` method is not supported by GitHub/npm for READMEs.)*
+[![Star History Chart](https://api.star-history.com/svg?repos=PsycoStea/SiYuan-n8n-nodes&type=Timeline)](https://www.star-history.com/#PsycoStea/SiYuan-n8n-nodes&Timeline)
 
 <small>This project was vide coded.</small>
