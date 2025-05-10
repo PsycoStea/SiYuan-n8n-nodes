@@ -23,7 +23,7 @@ SiYuan is a privacy-first, self-hosted personal knowledge base that supports Mar
 
 ---
 
-## 💾 Installation
+## Installation
 
 1.  Go to **Settings > Community Nodes** in your n8n instance.
 2.  Select **Install**.
@@ -32,7 +32,7 @@ SiYuan is a privacy-first, self-hosted personal knowledge base that supports Mar
 
 Alternatively, follow the generic [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-## ⚙️ The SiYuan Node
+## The SiYuan Node
 
 This package provides a single, comprehensive `SiYuan` node. You can select the desired action using the **Operation** dropdown within the node.
 
@@ -66,7 +66,7 @@ This package provides a single, comprehensive `SiYuan` node. You can select the 
 *   **System:**
     *   Get Version
 
-## 🔑 Credentials
+## Credentials
 
 To interact with your SiYuan instance, you'll need to configure the `SiYuan API` credentials in n8n:
 
@@ -84,11 +84,11 @@ To interact with your SiYuan instance, you'll need to configure the `SiYuan API`
     *   Paste your SiYuan **API Token**.
     *   Click **Save**.
 
-## 🚀 Usage Examples
+## Usage Examples
 
 The SiYuan node is designed for direct interaction with the API via clearly defined parameters for each operation. This makes it highly versatile for various automation tasks.
 
-**Using AI Agents in n8n:**
+**Using with AI Agents in n8n:**
 
 While this node itself doesn't perform AI functions, it can be a powerful downstream component for AI-driven workflows in n8n:
 
@@ -98,20 +98,20 @@ While this node itself doesn't perform AI functions, it can be a powerful downst
 
 The possibilities are broad when combining n8n's AI capabilities with direct SiYuan integration!
 
-## 🔗 Compatibility
+## Compatibility
 
 *   **Minimum n8n Version:** Recommended `v1.22.0+` (due to stable Node API v1 usage).
 *   **Tested n8n Versions:** Actively tested with n8n `v1.40.0` and newer.
 *   **SiYuan API:** Developed against the SiYuan API as documented [here](https://github.com/siyuan-note/siyuan/blob/master/API.md). Compatibility is expected with recent SiYuan versions that support this API.
 
-## 📚 Resources
+## Resources
 
 *   [n8n Community Nodes Documentation](https://docs.n8n.io/integrations/community-nodes/)
 *   [Official SiYuan API Documentation](https://github.com/siyuan-note/siyuan/blob/master/API.md)
 *   [SiYuan User Guide](https://b3log.org/siyuan/en/guide)
 *   [Project Repository (Issues, Source Code)](https://github.com/PsycoStea/SiYuan-n8n-nodes)
 
-## 📜 Version History
+## Version History
 
 *   **`0.2.0`** (2025-05-10)
     *   Major refactor: Consolidated all functionality into a single `SiYuan` node with an operation selector.
@@ -121,7 +121,7 @@ The possibilities are broad when combining n8n's AI capabilities with direct SiY
 *   **`0.1.x`**
     *   Previous experimental versions with individual tool nodes (now deprecated).
 
-## 🤝 Contributing
+## Contributing
 
 Contributions, issues, and feature requests are welcome! Please feel free to check the [issues page](https://github.com/PsycoStea/SiYuan-n8n-nodes/issues).
 
@@ -129,4 +129,4 @@ Contributions, issues, and feature requests are welcome! Please feel free to che
 
 [![Star History Chart](https://api.star-history.com/svg?repos=PsycoStea/SiYuan-n8n-nodes&type=Timeline)](https://www.star-history.com/#PsycoStea/SiYuan-n8n-nodes&Timeline)
 
-<small>This project was vide coded.</small>
+<small>This project was vibe coded. This is my first big project ❤️</small>
