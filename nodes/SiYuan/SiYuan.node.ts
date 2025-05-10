@@ -22,7 +22,9 @@ export class SiYuan implements INodeType {
 		defaults: {
 			name: 'SiYuan', // Renamed default
 		},
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [NodeConnectionType.Main],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{

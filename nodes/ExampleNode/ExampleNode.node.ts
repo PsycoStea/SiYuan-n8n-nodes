@@ -16,7 +16,9 @@ export class ExampleNode implements INodeType {
 		defaults: {
 			name: 'Example Node',
 		},
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [NodeConnectionType.Main],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionType.Main],
 		properties: [
 			// Node properties which the user gets displayed and
