@@ -4,25 +4,26 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
+	NodeConnectionType, // Added as value import
 } from 'n8n-workflow';
 
 import { SiYuanClient } from '../../lib/SiYuanClient'; // Adjust path as needed
 
-export class SiYuanAI implements INodeType {
+export class SiYuan implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'SiYuan', // Renamed
-		name: 'siYuanAi', // Internal name remains the same
+		displayName: 'SiYuan',
+		name: 'siYuan',
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-icon-not-svg
-		icon: 'file:siyuanai.svg', // Placeholder - icon needs to be created
-		group: ['ai', 'productivity'], // Assuming 'ai' group exists or adjust as needed
+		icon: 'file:siyuan.svg',
+		group: ['productivity'],
 		version: 1,
 		subtitle: '={{$parameter[\"operation\"]}}',
 		description: 'Interacts with the SiYuan API using selected operations',
 		defaults: {
 			name: 'SiYuan', // Renamed default
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionType.Main],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'siYuanApi',

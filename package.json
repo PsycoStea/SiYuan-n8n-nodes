@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-siyuan",
-  "version": "0.1.19",
+  "version": "0.2.0",
   "description": "n8n nodes for siyuan",
   "keywords": [
     "n8n-community-node-package"
@@ -42,26 +42,7 @@
     "nodes": [
       "dist/nodes/ExampleNode/ExampleNode.node.js",
       "dist/nodes/HttpBin/HttpBin.node.js",
-      "dist/nodes/SiYuanAI/SiYuanAi.node.js",
-      "dist/nodes/SiYuanAppendBlockTool/SiYuanAppendBlockTool.node.js",
-      "dist/nodes/SiYuanCreateDocTool/SiYuanCreateDocTool.node.js",
-      "dist/nodes/SiYuanDeleteBlockTool/SiYuanDeleteBlockTool.node.js",
-      "dist/nodes/SiYuanGetBlockAttrsTool/SiYuanGetBlockAttrsTool.node.js",
-      "dist/nodes/SiYuanGetBlockKramdownTool/SiYuanGetBlockKramdownTool.node.js",
-      "dist/nodes/SiYuanGetDocIdByPathTool/SiYuanGetDocIdByPathTool.node.js",
-      "dist/nodes/SiYuanGetDocPathByIdTool/SiYuanGetDocPathByIdTool.node.js",
-      "dist/nodes/SiYuanGetVersionTool/SiYuanGetVersionTool.node.js",
-      "dist/nodes/SiYuanInsertBlockTool/SiYuanInsertBlockTool.node.js",
-      "dist/nodes/SiYuanMoveDocTool/SiYuanMoveDocTool.node.js",
-      "dist/nodes/SiYuanPrependBlockTool/SiYuanPrependBlockTool.node.js",
-      "dist/nodes/SiYuanPushErrMsgTool/SiYuanPushErrMsgTool.node.js",
-      "dist/nodes/SiYuanPushMsgTool/SiYuanPushMsgTool.node.js",
-      "dist/nodes/SiYuanRemoveDocTool/SiYuanRemoveDocTool.node.js",
-      "dist/nodes/SiYuanRenameDocTool/SiYuanRenameDocTool.node.js",
-      "dist/nodes/SiYuanRenderSprigTool/SiYuanRenderSprigTool.node.js",
-      "dist/nodes/SiYuanSetBlockAttrsTool/SiYuanSetBlockAttrsTool.node.js",
-      "dist/nodes/SiYuanSqlQueryTool/SiYuanSqlQueryTool.node.js",
-      "dist/nodes/SiYuanUpdateBlockTool/SiYuanUpdateBlockTool.node.js"
+      "dist/nodes/SiYuan/SiYuan.node.js"
     ]
   },
   "devDependencies": {
