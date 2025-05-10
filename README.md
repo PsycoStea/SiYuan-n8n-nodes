@@ -114,6 +114,7 @@ The possibilities are broad when combining n8n's AI capabilities with direct SiY
 
 ## Version History
 
+*   **`0.2.1`** (Planned) - README updates.
 *   **`0.2.0`** (2025-05-10)
     *   Major refactor: Consolidated all functionality into a single `SiYuan` node with an operation selector.
     *   Removed "AI" branding from node name for clarity.
@@ -128,6 +129,8 @@ Contributions, issues, and feature requests are welcome! Please feel free to che
 
 ---
 
-[![Star History Chart](https://api.star-history.com/svg?repos=PsycoStea/SiYuan-n8n-nodes&type=Timeline)](https://www.star-history.com/#PsycoStea/SiYuan-n8n-nodes&Timeline)
+*If you want to display your Star History, you can generate an SVG/image from [star-history.com](https://star-history.com/) and embed it here. For example:*
+`[![Star History Chart](https://api.star-history.com/svg?repos=PsycoStea/SiYuan-n8n-nodes&type=Timeline)](https://www.star-history.com/#PsycoStea/SiYuan-n8n-nodes&Timeline)`
+*(The `<iframe>` method is not supported by GitHub/npm for READMEs.)*
 
 <small>This project was vibe coded. This is my first big project ❤️</small>
