@@ -41,27 +41,27 @@ export class SiYuan implements INodeType {
 				noDataExpression: true,
 				// Alphabetized options with descriptions and actions
 				options: [
-					{ name: 'Append Block', value: 'appendBlock', description: 'Append Markdown/DOM block to a parent block', action: 'Append markdown dom block to a parent block'},
-					{ name: 'Create Document', value: 'createDoc', description: 'Create a new document with Markdown content', action: 'Create a new document with markdown content'},
-					{ name: 'Delete Block', value: 'deleteBlock', description: 'Delete a block by its ID', action: 'Delete a block by its ID'},
-					{ name: 'Execute SQL Query', value: 'sqlQuery', description: 'Execute a SQL query against the SiYuan database', action: 'Execute a sql query against the si yuan database'},
-					{ name: 'Get Block Attributes', value: 'getBlockAttrs', description: 'Get attributes of a block by its ID', action: 'Get attributes of a block by its ID'},
-					{ name: 'Get Block Kramdown', value: 'getBlockKramdown', description: 'Get the Kramdown source of a block by its ID', action: 'Get the kramdown source of a block by its id'},
-					{ name: 'Get Document ID by Path', value: 'getDocIdByPath', description: 'Find the document ID based on its human-readable path (HPath)', action: 'Find the document id based on its human readable path h path'},
-					{ name: 'Get Document Path by ID', value: 'getDocPathById', description: 'Get the human-readable path (HPath) of a document by its ID', action: 'Get the human readable path h path of a document by its id'},
-					{ name: 'Get Version', value: 'getVersion', description: 'Get the SiYuan system version', action: 'Get the si yuan system version'},
-					{ name: 'Insert Block', value: 'insertBlock', description: 'Insert a Markdown/DOM block relative to another block', action: 'Insert a markdown dom block relative to another block'},
-					{ name: 'List Documents in Notebook', value: 'listDocsInNotebook', description: 'Lists all documents within a specified notebook', action: 'List documents in notebook'},
-					{ name: 'List Notebooks', value: 'listNotebooks', description: 'Lists all available notebooks', action: 'List notebooks'},
-					{ name: 'Move Document', value: 'moveDoc', description: 'Move a document to another parent (notebook or document)', action: 'Move a document to another parent notebook or document'},
-					{ name: 'Prepend Block', value: 'prependBlock', description: 'Prepend Markdown/DOM block to a parent block', action: 'Prepend markdown dom block to a parent block'},
-					{ name: 'Push Error Message', value: 'pushErrMsg', description: 'Display an error message notification in SiYuan', action: 'Display an error message notification in si yuan'},
-					{ name: 'Push Message', value: 'pushMsg', description: 'Display an informational message notification in SiYuan', action: 'Display an informational message notification in si yuan'},
-					{ name: 'Remove Document', value: 'removeDoc', description: 'Remove a document by its ID', action: 'Remove a document by its ID'},
-					{ name: 'Rename Document', value: 'renameDoc', description: 'Rename a document by its ID', action: 'Rename a document by its ID'},
-					{ name: 'Render Sprig Template', value: 'renderSprig', description: 'Render a template string using Sprig functions', action: 'Render a template string using sprig functions'},
-					{ name: 'Set Block Attributes', value: 'setBlockAttrs', description: 'Set attributes for a block by its ID', action: 'Set attributes for a block by its ID'},
-					{ name: 'Update Block', value: 'updateBlock', description: 'Update the content of a block by its ID', action: 'Update the content of a block by its ID'},
+					{ name: 'Append Block', value: 'appendBlock', description: 'Adds a new block of content (Markdown or HTML) to the end of a specified parent block (like a document or another block within it)', action: 'Append markdown dom block to a parent block'},
+					{ name: 'Create Document', value: 'createDoc', description: 'Creates a brand new document within a chosen notebook, using the Markdown content you provide', action: 'Create a new document with markdown content'},
+					{ name: 'Delete Block', value: 'deleteBlock', description: 'Permanently removes a specific block (like a paragraph, list, or image) using its unique ID', action: 'Delete a block by its ID'},
+					{ name: 'Execute SQL Query', value: 'sqlQuery', description: 'Runs a custom SQL query directly on your SiYuan database to fetch or modify data', action: 'Execute a sql query against the si yuan database'},
+					{ name: 'Get Block Attributes', value: 'getBlockAttrs', description: 'Retrieves all custom and built-in attributes (like title, name, alias) for a specific block using its ID', action: 'Get attributes of a block by its ID'},
+					{ name: 'Get Block Kramdown', value: 'getBlockKramdown', description: 'Fetches the raw Markdown (Kramdown format) content of a specific block (including documents) using its ID', action: 'Get the kramdown source of a block by its id'},
+					{ name: 'Get Document ID by Path', value: 'getDocIdByPath', description: 'Finds the unique ID of a document by providing its folder-like path (e.g., /My Notes/Meeting Summary) within a notebook', action: 'Find the document id based on its human readable path h path'},
+					{ name: 'Get Document Path by ID', value: 'getDocPathById', description: 'Retrieves the human-readable folder-like path (e.g., /My Notes/Meeting Summary) for a document using its unique ID', action: 'Get the human readable path h path of a document by its id'},
+					{ name: 'Get Version', value: 'getVersion', description: 'Retrieves the current version number of your SiYuan application', action: 'Get the si yuan system version'},
+					{ name: 'Insert Block', value: 'insertBlock', description: 'Adds a new block of content (Markdown or HTML) either before or after an existing block, or as the first/last child of a parent block', action: 'Insert a markdown dom block relative to another block'},
+					{ name: 'List Documents in Notebook', value: 'listDocsInNotebook', description: 'Retrieves a list of all documents (including their titles and IDs) found directly within a specific notebook', action: 'List documents in notebook'},
+					{ name: 'List Notebooks', value: 'listNotebooks', description: 'Retrieves a list of all your notebooks, showing their names and unique IDs', action: 'List notebooks'},
+					{ name: 'Move Document', value: 'moveDoc', description: 'Moves one or more documents to a different location (another notebook or as a sub-document)', action: 'Move a document to another parent notebook or document'},
+					{ name: 'Prepend Block', value: 'prependBlock', description: 'Adds a new block of content (Markdown or HTML) to the beginning of a specified parent block', action: 'Prepend markdown dom block to a parent block'},
+					{ name: 'Push Error Message', value: 'pushErrMsg', description: 'Shows an error message popup (toast notification) in the SiYuan user interface', action: 'Display an error message notification in si yuan'},
+					{ name: 'Push Message', value: 'pushMsg', description: 'Shows an informational message popup (toast notification) in the SiYuan user interface', action: 'Display an informational message notification in si yuan'},
+					{ name: 'Remove Document', value: 'removeDoc', description: 'Permanently deletes a document using its unique ID', action: 'Remove a document by its ID'},
+					{ name: 'Rename Document', value: 'renameDoc', description: 'Changes the title of an existing document using its unique ID', action: 'Rename a document by its ID'},
+					{ name: 'Render Sprig Template', value: 'renderSprig', description: 'Processes a template string using SiYuan\'s built-in Sprig template functions (useful for dynamic text generation)', action: 'Render a template string using sprig functions'},
+					{ name: 'Set Block Attributes', value: 'setBlockAttrs', description: 'Adds or updates custom or built-in attributes (like title, alias, custom tags) for a specific block', action: 'Set attributes for a block by its ID'},
+					{ name: 'Update Block', value: 'updateBlock', description: 'Replaces the entire content of an existing block with new Markdown or HTML content', action: 'Update the content of a block by its ID'},
 				],
 				default: 'createDoc', // Default remains the same
 
@@ -69,7 +69,7 @@ export class SiYuan implements INodeType {
 
 			// --- Parameters for Operations (Conditional Display) ---
 
-			// == Create Document ==
+			// == Create Document / Get Document ID by Path / List Documents in Notebook ==
 			{
 				displayName: 'Notebook ID',
 				name: 'notebookId',
@@ -77,17 +77,19 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath', 'listDocsInNotebook'] } },
-				description: 'ID of the target notebook',
+				description: 'The unique ID of the SiYuan notebook you want to work with (e.g., for creating a document in it or listing its documents)',
 			},
+			// == Create Document / Get Document ID by Path ==
 			{
-				displayName: 'Document Path (HPath)',
+				displayName: 'Document Path',
 				name: 'docPath',
 				type: 'string',
 				required: true,
 				default: '/',
 				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath'] } },
-				description: 'Human-readable path for the document (e.g., /My Folder/My Note)',
+				description: 'The folder-like path where the document should be created or found (e.g., `/My Project/Meeting Notes`). Must start with `/`',
 			},
+			// == Create Document ==
 			{
 				displayName: 'Markdown Content',
 				name: 'markdownContent',
@@ -96,13 +98,10 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['createDoc'] } },
-				description: 'GFM Markdown content for the new document',
+				description: 'The actual text and formatting (using GitHub Flavored Markdown) for the new document you\'re creating',
 			},
 
-			// == Rename Document ==
-			// == Remove Document ==
-			// == Move Document ==
-			// == Get Document Path by ID ==
+			// == Rename Document / Remove Document / Move Document / Get Document Path by ID ==
 			{
 				displayName: 'Document ID',
 				name: 'docId',
@@ -110,8 +109,9 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['renameDoc', 'removeDoc', 'moveDoc', 'getDocPathById'] } },
-				description: 'ID of the target document',
+				description: 'The unique ID of the SiYuan document you want to target for this operation (e.g., renaming, removing, moving)',
 			},
+			// == Rename Document ==
 			{
 				displayName: 'New Title',
 				name: 'newTitle',
@@ -119,21 +119,20 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['renameDoc'] } },
-				description: 'The new title for the document',
+				description: 'The new name you want to give to the document',
 			},
+			// == Move Document ==
 			{
-				displayName: 'Target Parent ID (Notebook or Doc)',
+				displayName: 'New Parent ID (Notebook/Doc)',
 				name: 'targetParentId',
 				type: 'string',
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['moveDoc'] } },
-				description: 'The ID of the notebook or document to move the source document(s) into',
+				description: 'The unique ID of the destination notebook or parent document where you want to move the selected document(s)',
 			},
-			// Note: moveDoc requires 'fromIDs' which might be better handled via expressions or multiple items
-			// For simplicity here, we assume a single docId is provided. Logic might need adjustment.
 
-			// == Block Operations (Common ID) ==
+			// == Block Operations (Common ID for Update, Delete, Get Kramdown, Set/Get Attributes) ==
 			{
 				displayName: 'Block ID',
 				name: 'blockId',
@@ -151,10 +150,10 @@ export class SiYuan implements INodeType {
 						]
 					}
 				},
-				description: 'ID of the target block',
+				description: 'The unique ID of the specific block (paragraph, list, image, or even a whole document) you want to affect',
 			},
 
-			// == Append/Prepend/Insert/Update Block ==
+			// == Append/Prepend/Insert Block ==
 			{
 				displayName: 'Parent Block ID',
 				name: 'parentBlockId',
@@ -162,26 +161,27 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['appendBlock', 'prependBlock', 'insertBlock'] } },
-				description: 'ID of the parent block (document or other block) to add content to',
+				description: 'The unique ID of the block (often a document or a list) inside which you want to add the new content',
 			},
+			// == Append/Prepend/Insert/Update Block ==
 			{
-				displayName: 'Data (Markdown)',
+				displayName: 'Content (Markdown/HTML)',
 				name: 'blockData',
 				type: 'string',
 				typeOptions: { multiLine: true },
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['appendBlock', 'prependBlock', 'insertBlock', 'updateBlock'] } },
-				description: 'Markdown content for the block',
+				description: 'The text and formatting (Markdown or HTML) for the new or updated block',
 			},
-			// Optional for Insert Block
+			// == Insert Block (Optional) ==
 			{
 				displayName: 'Previous Block ID',
 				name: 'previousBlockId',
 				type: 'string',
 				default: '',
 				displayOptions: { show: { operation: ['insertBlock'] } },
-				description: 'Optional: ID of the block to insert after',
+				description: 'Optional: If inserting a new block, this is the ID of the existing block that the new one should come *after*',
 			},
 			{
 				displayName: 'Next Block ID',
@@ -189,7 +189,7 @@ export class SiYuan implements INodeType {
 				type: 'string',
 				default: '',
 				displayOptions: { show: { operation: ['insertBlock'] } },
-				description: 'Optional: ID of the block to insert before (takes precedence over previousID)',
+				description: 'Optional: If inserting a new block, this is the ID of the existing block that the new one should come *before* (used if `Previous Block ID` is empty)',
 			},
 
 			// == Set Block Attributes ==
@@ -201,7 +201,7 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: {},
 				displayOptions: { show: { operation: ['setBlockAttrs'] } },
-				description: 'Attributes to set (key-value pairs). Custom attributes must start with "custom-".',
+				description: 'Define one or more attributes (name/value pairs) to add or update on the block. Custom attribute names need to start with `custom-`',
 				options: [
 					{
 						name: 'attributeValues',
@@ -212,14 +212,14 @@ export class SiYuan implements INodeType {
 								name: 'name',
 								type: 'string',
 								default: '',
-								description: 'Attribute name (e.g., custom-priority, title)',
+								description: 'The name of the attribute (e.g., `title`, `alias`, `custom-status`)',
 							},
 							{
 								displayName: 'Value',
 								name: 'value',
 								type: 'string',
 								default: '',
-								description: 'Attribute value',
+								description: 'The value to assign to this attribute',
 							},
 						],
 					},
@@ -235,7 +235,7 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: 'SELECT * FROM blocks LIMIT 10',
 				displayOptions: { show: { operation: ['sqlQuery'] } },
-				description: 'The SQL query to execute against the SiYuan database',
+				description: 'The full SQL query (e.g., `SELECT * FROM blocks WHERE content LIKE \'%keyword%\'`) to run on your SiYuan data',
 			},
 
 			// == Render Sprig Template ==
@@ -246,7 +246,7 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '{{now | date "2006-01-02"}}',
 				displayOptions: { show: { operation: ['renderSprig'] } },
-				description: 'The Sprig template string to render',
+				description: 'A template string using Sprig functions (e.g., `{{now | date "2006-01-02"}}`) that SiYuan will process',
 			},
 
 			// == Push Message / Push Error Message ==
@@ -257,7 +257,7 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '',
 				displayOptions: { show: { operation: ['pushMsg', 'pushErrMsg'] } },
-				description: 'The message content to display',
+				description: 'The text content of the notification message you want to show in SiYuan',
 			},
 			{
 				displayName: 'Timeout (Ms)',
@@ -265,7 +265,7 @@ export class SiYuan implements INodeType {
 				type: 'number',
 				default: 7000,
 				displayOptions: { show: { operation: ['pushMsg', 'pushErrMsg'] } },
-				description: 'Duration to display the message (in milliseconds)',
+				description: 'How long (in milliseconds) the notification message should stay visible in SiYuan (e.g., 7000 for 7 seconds)',
 			},
 		],
 	};
