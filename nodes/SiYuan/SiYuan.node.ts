@@ -87,7 +87,7 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '/',
 				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath'] } },
-				description: 'The folder-like path where the document should be created or found (e.g., `/My Project/Meeting Notes`). Must start with `/`',
+				description: 'The folder-like path where the document should be created or found (e.g., `/My Project/Meeting Notes`). Must start with `/`.',
 			},
 			// == Create Document ==
 			{
@@ -201,7 +201,7 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: {},
 				displayOptions: { show: { operation: ['setBlockAttrs'] } },
-				description: 'Define one or more attributes (name/value pairs) to add or update on the block. Custom attribute names need to start with `custom-`',
+				description: 'Define one or more attributes (name/value pairs) to add or update on the block. Custom attribute names need to start with `custom-`.',
 				options: [
 					{
 						name: 'attributeValues',
