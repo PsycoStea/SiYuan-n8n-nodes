@@ -110,6 +110,10 @@ export class SiYuanClient {
 		return this.request<string>('/api/filetree/getHPathByID', { id });
 	}
 
+	async exportDocMd(documentId: string): Promise<ExportedDocMd> {
+		return this.request<ExportedDocMd>('/api/export/exportMdContent', { id: documentId });
+	}
+
 	// --- Block Operations ---
 
 	async appendBlock(parentID: string, data: string, dataType: 'markdown' | 'dom' = 'markdown'): Promise<any> { // Consider defining a specific return type if needed
@@ -134,6 +138,10 @@ export class SiYuanClient {
 
 	async deleteBlock(blockId: string): Promise<any> {
 		return this.request('/api/block/deleteBlock', { id: blockId });
+	}
+
+	async getChildBlocks(parentBlockId: string): Promise<SiYuanChildBlockInfo[]> {
+		return this.request<SiYuanChildBlockInfo[]>('/api/block/getChildBlocks', { id: parentBlockId });
 	}
 
 	async getBlockKramdown(blockId: string): Promise<{ id: string; kramdown: string }> {
@@ -198,6 +206,15 @@ export class SiYuanClient {
 
 	// --- File/Directory Operations ---
 
+	async listFilesInDirectory(directoryPath: string): Promise<SiYuanDirEntry[]> {
+		// Ensure the path starts with a slash if it's not already the case,
+		// although the API expects paths relative to workspace (e.g. /data/, /assets/)
+		// For consistency, we might enforce or assume leading slash based on API behavior.
+		// The API doc for /api/file/readDir implies path is "the dir path under the workspace path"
+		// e.g. { "path": "/data/notebookID" }
+		return this.request<SiYuanDirEntry[]>('/api/file/readDir', { path: directoryPath });
+	}
+
 	async listDocsInNotebook(notebookId: string): Promise<ListedDocument[]> {
 		const constructedPath = `/data/${notebookId}`;
 		const entries = await this.request<SiYuanDirEntry[]>('/api/file/readDir', { path: constructedPath });
@@ -233,6 +250,19 @@ export class SiYuanClient {
 
 	// --- Notebook Operations ---
 
+	async createNotebook(name: string): Promise<SiYuanNotebookInfo> {
+		const response = await this.request<{ notebook: SiYuanNotebookInfo }>('/api/notebook/createNotebook', { name });
+		return response.notebook;
+	}
+
+	async renameNotebook(notebookId: string, newName: string): Promise<null> {
+		return this.request<null>('/api/notebook/renameNotebook', { notebook: notebookId, name: newName });
+	}
+
+	async removeNotebook(notebookId: string): Promise<null> {
+		return this.request<null>('/api/notebook/removeNotebook', { notebook: notebookId });
+	}
+
 	async listNotebooks(): Promise<SiYuanNotebookInfo[]> {
 		const response = await this.request<{ notebooks: SiYuanNotebookInfo[] }>('/api/notebook/lsNotebooks', {});
 		return response.notebooks || []; // Ensure an array is returned even if notebooks is null/undefined
@@ -265,4 +295,16 @@ export interface SiYuanNotebookInfo { // Export if it needs to be used by the no
 	icon: string;
 	sort: number;
 	closed: boolean;
+}
+
+export interface SiYuanChildBlockInfo {
+	id: string;
+	type: string; // e.g., 'p' (paragraph), 'h' (heading), 'l' (list), 'i' (list item), 'd' (document)
+	subType?: string; // e.g., 'h1'-'h6' for headings, 'u' (unordered) or 'o' (ordered) for lists
+	// The API might return other fields, add them as needed
+}
+
+export interface ExportedDocMd {
+	hPath: string;
+	content: string;
 }

@@ -40,6 +40,11 @@ This package provides a single, comprehensive `SiYuan` node. You can select the 
 
 **Supported Operations:**
 
+*   **Notebook Management:**
+    *   Create Notebook
+    *   Rename Notebook
+    *   Remove Notebook
+    *   List Notebooks
 *   **Document Management:**
     *   Create Document
     *   Rename Document
@@ -48,7 +53,7 @@ This package provides a single, comprehensive `SiYuan` node. You can select the 
     *   Get Document ID by Path
     *   Get Document Path by ID
     *   List Documents in Notebook (includes titles)
-    *   List Notebooks
+    *   Export Document Markdown
 *   **Block Manipulation:**
     *   Append Block
     *   Prepend Block
@@ -56,6 +61,9 @@ This package provides a single, comprehensive `SiYuan` node. You can select the 
     *   Update Block
     *   Delete Block
     *   Get Block Kramdown
+    *   Get Child Blocks
+*   **File System (Workspace):**
+    *   List Files in Directory
 *   **Attributes:**
     *   Set Block Attributes
     *   Get Block Attributes
@@ -115,6 +123,11 @@ The possibilities are broad when combining n8n's AI capabilities with direct SiY
 
 ## Version History
 
+*   **`0.4.0`** (2025-05-11)
+    *   Added Notebook Management: Create Notebook, Rename Notebook, Remove Notebook.
+    *   Added Get Child Blocks operation.
+    *   Added Export Document Markdown operation.
+    *   Added List Files in Directory operation.
 *   **`0.3.1`** (2025-05-11)
     *   Improved clarity of operation and parameter descriptions in the node UI.
     *   Includes minor lint fixes for descriptions.

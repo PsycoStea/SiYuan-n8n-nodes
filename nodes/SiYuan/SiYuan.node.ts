@@ -43,22 +43,28 @@ export class SiYuan implements INodeType {
 				options: [
 					{ name: 'Append Block', value: 'appendBlock', description: 'Adds a new block of content (Markdown or HTML) to the end of a specified parent block (like a document or another block within it)', action: 'Append markdown dom block to a parent block'},
 					{ name: 'Create Document', value: 'createDoc', description: 'Creates a brand new document within a chosen notebook, using the Markdown content you provide', action: 'Create a new document with markdown content'},
+					{ name: 'Create Notebook', value: 'createNotebook', description: 'Creates a new, empty notebook in SiYuan', action: 'Create notebook'},
 					{ name: 'Delete Block', value: 'deleteBlock', description: 'Permanently removes a specific block (like a paragraph, list, or image) using its unique ID', action: 'Delete a block by its ID'},
 					{ name: 'Execute SQL Query', value: 'sqlQuery', description: 'Runs a custom SQL query directly on your SiYuan database to fetch or modify data', action: 'Execute a sql query against the si yuan database'},
+					{ name: 'Export Document Markdown', value: 'exportDocMd', description: 'Exports a document\'s full Markdown content along with its human-readable path (HPath)', action: 'Export document markdown'},
 					{ name: 'Get Block Attributes', value: 'getBlockAttrs', description: 'Retrieves all custom and built-in attributes (like title, name, alias) for a specific block using its ID', action: 'Get attributes of a block by its ID'},
 					{ name: 'Get Block Kramdown', value: 'getBlockKramdown', description: 'Fetches the raw Markdown (Kramdown format) content of a specific block (including documents) using its ID', action: 'Get the kramdown source of a block by its id'},
+					{ name: 'Get Child Blocks', value: 'getChildBlocks', description: 'Retrieves a list of direct child blocks under a specified parent block ID', action: 'Get child blocks'},
 					{ name: 'Get Document ID by Path', value: 'getDocIdByPath', description: 'Finds the unique ID of a document by providing its folder-like path (e.g., /My Notes/Meeting Summary) within a notebook', action: 'Find the document id based on its human readable path h path'},
 					{ name: 'Get Document Path by ID', value: 'getDocPathById', description: 'Retrieves the human-readable folder-like path (e.g., /My Notes/Meeting Summary) for a document using its unique ID', action: 'Get the human readable path h path of a document by its id'},
 					{ name: 'Get Version', value: 'getVersion', description: 'Retrieves the current version number of your SiYuan application', action: 'Get the si yuan system version'},
 					{ name: 'Insert Block', value: 'insertBlock', description: 'Adds a new block of content (Markdown or HTML) either before or after an existing block, or as the first/last child of a parent block', action: 'Insert a markdown dom block relative to another block'},
 					{ name: 'List Documents in Notebook', value: 'listDocsInNotebook', description: 'Retrieves a list of all documents (including their titles and IDs) found directly within a specific notebook', action: 'List documents in notebook'},
+					{ name: 'List Files in Directory', value: 'listFilesInDir', description: 'Lists files and folders within a specified directory path under the SiYuan workspace (e.g., /data/notebook_id/, /assets/)', action: 'List files in directory'},
 					{ name: 'List Notebooks', value: 'listNotebooks', description: 'Retrieves a list of all your notebooks, showing their names and unique IDs', action: 'List notebooks'},
 					{ name: 'Move Document', value: 'moveDoc', description: 'Moves one or more documents to a different location (another notebook or as a sub-document)', action: 'Move a document to another parent notebook or document'},
 					{ name: 'Prepend Block', value: 'prependBlock', description: 'Adds a new block of content (Markdown or HTML) to the beginning of a specified parent block', action: 'Prepend markdown dom block to a parent block'},
 					{ name: 'Push Error Message', value: 'pushErrMsg', description: 'Shows an error message popup (toast notification) in the SiYuan user interface', action: 'Display an error message notification in si yuan'},
 					{ name: 'Push Message', value: 'pushMsg', description: 'Shows an informational message popup (toast notification) in the SiYuan user interface', action: 'Display an informational message notification in si yuan'},
 					{ name: 'Remove Document', value: 'removeDoc', description: 'Permanently deletes a document using its unique ID', action: 'Remove a document by its ID'},
+					{ name: 'Remove Notebook', value: 'removeNotebook', description: 'Permanently deletes an entire notebook and all its contents. Use with caution as this is irreversible', action: 'Remove notebook (irreversible!)'},
 					{ name: 'Rename Document', value: 'renameDoc', description: 'Changes the title of an existing document using its unique ID', action: 'Rename a document by its ID'},
+					{ name: 'Rename Notebook', value: 'renameNotebook', description: 'Changes the name of an existing notebook', action: 'Rename notebook'},
 					{ name: 'Render Sprig Template', value: 'renderSprig', description: 'Processes a template string using SiYuan\'s built-in Sprig template functions (useful for dynamic text generation)', action: 'Render a template string using sprig functions'},
 					{ name: 'Set Block Attributes', value: 'setBlockAttrs', description: 'Adds or updates custom or built-in attributes (like title, alias, custom tags) for a specific block', action: 'Set attributes for a block by its ID'},
 					{ name: 'Update Block', value: 'updateBlock', description: 'Replaces the entire content of an existing block with new Markdown or HTML content', action: 'Update the content of a block by its ID'},
@@ -76,7 +82,7 @@ export class SiYuan implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath', 'listDocsInNotebook'] } },
+				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath', 'listDocsInNotebook', 'renameNotebook', 'removeNotebook'] } },
 				description: 'The unique ID of the SiYuan notebook you want to work with (e.g., for creating a document in it or listing its documents)',
 			},
 			// == Create Document / Get Document ID by Path ==
@@ -89,6 +95,16 @@ export class SiYuan implements INodeType {
 				displayOptions: { show: { operation: ['createDoc', 'getDocIdByPath'] } },
 				description: 'The folder-like path where the document should be created or found (e.g., `/My Project/Meeting Notes`). Must start with `/`.',
 			},
+			// == List Files in Directory ==
+			{
+				displayName: 'Directory Path',
+				name: 'directoryPath',
+				type: 'string',
+				required: true,
+				default: '/data/',
+				displayOptions: { show: { operation: ['listFilesInDir'] } },
+				description: 'The path of the directory within the SiYuan workspace (e.g., /data/notebook_id/, /assets/). Must start with /',
+			},
 			// == Create Document ==
 			{
 				displayName: 'Markdown Content',
@@ -100,6 +116,26 @@ export class SiYuan implements INodeType {
 				displayOptions: { show: { operation: ['createDoc'] } },
 				description: 'The actual text and formatting (using GitHub Flavored Markdown) for the new document you\'re creating',
 			},
+			// == Create Notebook ==
+			{
+				displayName: 'New Notebook Name',
+				name: 'notebookNameForCreate',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: { show: { operation: ['createNotebook'] } },
+				description: 'The name for the new notebook to be created',
+			},
+			// == Rename Notebook ==
+			{
+				displayName: 'New Name for Notebook',
+				name: 'notebookNewName', // Distinct name for this parameter
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: { show: { operation: ['renameNotebook'] } },
+				description: 'The new name to assign to the specified notebook',
+			},
 
 			// == Rename Document / Remove Document / Move Document / Get Document Path by ID ==
 			{
@@ -108,7 +144,7 @@ export class SiYuan implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				displayOptions: { show: { operation: ['renameDoc', 'removeDoc', 'moveDoc', 'getDocPathById'] } },
+				displayOptions: { show: { operation: ['renameDoc', 'removeDoc', 'moveDoc', 'getDocPathById', 'exportDocMd'] } },
 				description: 'The unique ID of the SiYuan document you want to target for this operation (e.g., renaming, removing, moving)',
 			},
 			// == Rename Document ==
@@ -147,6 +183,7 @@ export class SiYuan implements INodeType {
 							'getBlockKramdown',
 							'setBlockAttrs',
 							'getBlockAttrs',
+							'getChildBlocks',
 						]
 					}
 				},
@@ -292,6 +329,12 @@ export class SiYuan implements INodeType {
 				let result: any; // Use 'any' for simplicity, refine later if needed
 
 				switch (operation) {
+					// --- Notebook/Document Creation ---
+					case 'createNotebook': {
+						const notebookName = this.getNodeParameter('notebookNameForCreate', itemIndex) as string;
+						result = await client.createNotebook(notebookName);
+						break;
+					}
 					// --- Document Operations ---
 					case 'createDoc': {
 						const notebookId = this.getNodeParameter('notebookId', itemIndex) as string;
@@ -306,9 +349,21 @@ export class SiYuan implements INodeType {
 						result = await client.renameDocByID(docId, newTitle);
 						break;
 					}
+					case 'renameNotebook': {
+						const notebookId = this.getNodeParameter('notebookId', itemIndex) as string;
+						const newNotebookName = this.getNodeParameter('notebookNewName', itemIndex) as string;
+						result = await client.renameNotebook(notebookId, newNotebookName);
+						break;
+					}
 					case 'removeDoc': {
 						const docId = this.getNodeParameter('docId', itemIndex) as string;
 						result = await client.removeDocByID(docId);
+						break;
+					}
+					case 'removeNotebook': {
+						const notebookId = this.getNodeParameter('notebookId', itemIndex) as string;
+						// Confirmation check removed as per user request
+						result = await client.removeNotebook(notebookId);
 						break;
 					}
 					case 'moveDoc': {
@@ -336,6 +391,11 @@ export class SiYuan implements INodeType {
 					}
 					case 'listNotebooks': {
 						result = await client.listNotebooks();
+						break;
+					}
+					case 'listFilesInDir': {
+						const directoryPath = this.getNodeParameter('directoryPath', itemIndex) as string;
+						result = await client.listFilesInDirectory(directoryPath);
 						break;
 					}
 
@@ -376,6 +436,11 @@ export class SiYuan implements INodeType {
 						result = await client.getBlockKramdown(blockId);
 						break;
 					}
+					case 'getChildBlocks': {
+						const parentBlockId = this.getNodeParameter('blockId', itemIndex) as string; // Reusing 'blockId' as the parent ID
+						result = await client.getChildBlocks(parentBlockId);
+						break;
+					}
 
 					// --- Attribute Operations ---
 					case 'setBlockAttrs': {
@@ -402,6 +467,11 @@ export class SiYuan implements INodeType {
 					case 'sqlQuery': {
 						const sqlStatement = this.getNodeParameter('sqlStatement', itemIndex) as string;
 						result = await client.sqlQuery(sqlStatement);
+						break;
+					}
+					case 'exportDocMd': {
+						const docId = this.getNodeParameter('docId', itemIndex) as string;
+						result = await client.exportDocMd(docId);
 						break;
 					}
 
