@@ -115,10 +115,12 @@ The possibilities are broad when combining n8n's AI capabilities with direct SiY
 
 ## Version History
 
+*   **`0.3.1`** (2025-05-11)
+    *   Improved clarity of operation and parameter descriptions in the node UI.
+    *   Includes minor lint fixes for descriptions.
 *   **`0.3.0`** (2025-05-10)
     *   Added "List Documents in Notebook" operation (fetches document titles).
     *   Added "List Notebooks" operation.
-*   **`0.2.1`** (Planned) - README updates.
 *   **`0.2.0`** (2025-05-10)
     *   Major refactor: Consolidated all functionality into a single `SiYuan` node with an operation selector.
     *   Removed "AI" branding from node name for clarity.
