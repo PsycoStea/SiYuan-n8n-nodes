@@ -62,7 +62,7 @@ export class SiYuan implements INodeType {
 					{ name: 'Push Error Message', value: 'pushErrMsg', description: 'Shows an error message popup (toast notification) in the SiYuan user interface', action: 'Display an error message notification in si yuan'},
 					{ name: 'Push Message', value: 'pushMsg', description: 'Shows an informational message popup (toast notification) in the SiYuan user interface', action: 'Display an informational message notification in si yuan'},
 					{ name: 'Remove Document', value: 'removeDoc', description: 'Permanently deletes a document using its unique ID', action: 'Remove a document by its ID'},
-					{ name: 'Remove Notebook', value: 'removeNotebook', description: 'Permanently deletes an entire notebook and all its contents. Use with caution as this is irreversible', action: 'Remove notebook (irreversible!)'},
+					{ name: 'Remove Notebook', value: 'removeNotebook', description: 'Permanently deletes an entire notebook and all its contents. Use with caution as this is irreversible.', action: 'Remove notebook irreversible'},
 					{ name: 'Rename Document', value: 'renameDoc', description: 'Changes the title of an existing document using its unique ID', action: 'Rename a document by its ID'},
 					{ name: 'Rename Notebook', value: 'renameNotebook', description: 'Changes the name of an existing notebook', action: 'Rename notebook'},
 					{ name: 'Render Sprig Template', value: 'renderSprig', description: 'Processes a template string using SiYuan\'s built-in Sprig template functions (useful for dynamic text generation)', action: 'Render a template string using sprig functions'},
@@ -103,7 +103,7 @@ export class SiYuan implements INodeType {
 				required: true,
 				default: '/data/',
 				displayOptions: { show: { operation: ['listFilesInDir'] } },
-				description: 'The path of the directory within the SiYuan workspace (e.g., /data/notebook_id/, /assets/). Must start with /',
+				description: 'The path of the directory within the SiYuan workspace (e.g., /data/notebook_id/, /assets/). Must start with /.',
 			},
 			// == Create Document ==
 			{
