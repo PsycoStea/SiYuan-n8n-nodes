@@ -67,8 +67,14 @@ This package provides a single, comprehensive `SiYuan` node. You can select the 
 *   **Attributes:**
     *   Set Block Attributes
     *   Get Block Attributes
-*   **Database & Templating:**
+*   **Database Operations:**
+    *   Create Database Table
+    *   Insert Database Row
+    *   Update Database Row
+    *   Delete Database Row
+    *   Get Database Table
     *   Execute SQL Query
+*   **Templating:**
     *   Render Sprig Template
 *   **Notifications:**
     *   Push Message
@@ -105,6 +111,7 @@ While this node itself doesn't perform AI functions, it can be a powerful downst
 *   **AI-Generated Content:** Use an LLM node (like OpenAI, Anthropic, or a local model via Ollama) to generate meeting summaries, blog post drafts, or research notes. Then, pass this generated Markdown content to the SiYuan node's "Create Document" or "Append Block" operation to automatically save it into your knowledge base.
 *   **AI-Powered Task Management:** An AI agent could parse incoming emails or messages, extract tasks, and then use the SiYuan node to create new task blocks or documents in a specific project notebook.
 *   **Dynamic Querying:** Use an AI node to formulate SQL queries based on natural language questions about your notes, then pass the SQL to the SiYuan node's "Execute SQL Query" operation to retrieve information.
+*   **Database-Driven Workflows:** Create structured data tables in SiYuan using "Create Database Table", then automatically populate them with data from other sources using "Insert Database Row". Perfect for tracking projects, contacts, or any structured information within your knowledge base.
 
 The possibilities are broad when combining n8n's AI capabilities with direct SiYuan integration!
 
@@ -123,6 +130,10 @@ The possibilities are broad when combining n8n's AI capabilities with direct SiY
 
 ## Version History
 
+*   **`0.5.0`** (Current Development)
+    *   Added Database Operations: Create Database Table, Insert Database Row, Update Database Row, Delete Database Row, Get Database Table.
+    *   Enhanced support for working with SiYuan database/table blocks with full CRUD (Create, Read, Update, Delete) functionality.
+    *   Improved database functionality with structured column definitions and row data management.
 *   **`0.4.0`** (2025-05-11)
     *   Added Notebook Management: Create Notebook, Rename Notebook, Remove Notebook.
     *   Added Get Child Blocks operation.

@@ -42,18 +42,22 @@ export class SiYuan implements INodeType {
 				// Alphabetized options with descriptions and actions
 				options: [
 					{ name: 'Append Block', value: 'appendBlock', description: 'Adds a new block of content (Markdown or HTML) to the end of a specified parent block (like a document or another block within it)', action: 'Append markdown dom block to a parent block'},
+					{ name: 'Create Database Table', value: 'createDatabaseTable', description: 'Creates a new database table block with specified columns in a parent block', action: 'Create a database table with columns'},
 					{ name: 'Create Document', value: 'createDoc', description: 'Creates a brand new document within a chosen notebook, using the Markdown content you provide', action: 'Create a new document with markdown content'},
 					{ name: 'Create Notebook', value: 'createNotebook', description: 'Creates a new, empty notebook in SiYuan', action: 'Create notebook'},
 					{ name: 'Delete Block', value: 'deleteBlock', description: 'Permanently removes a specific block (like a paragraph, list, or image) using its unique ID', action: 'Delete a block by its ID'},
+					{ name: 'Delete Database Row', value: 'deleteDatabaseRow', description: 'Permanently removes a specific row from a database table block', action: 'Delete a row from a database table'},
 					{ name: 'Execute SQL Query', value: 'sqlQuery', description: 'Runs a custom SQL query directly on your SiYuan database to fetch or modify data', action: 'Execute a sql query against the si yuan database'},
 					{ name: 'Export Document Markdown', value: 'exportDocMd', description: 'Exports a document\'s full Markdown content along with its human-readable path (HPath)', action: 'Export document markdown'},
 					{ name: 'Get Block Attributes', value: 'getBlockAttrs', description: 'Retrieves all custom and built-in attributes (like title, name, alias) for a specific block using its ID', action: 'Get attributes of a block by its ID'},
 					{ name: 'Get Block Kramdown', value: 'getBlockKramdown', description: 'Fetches the raw Markdown (Kramdown format) content of a specific block (including documents) using its ID', action: 'Get the kramdown source of a block by its id'},
 					{ name: 'Get Child Blocks', value: 'getChildBlocks', description: 'Retrieves a list of direct child blocks under a specified parent block ID', action: 'Get child blocks'},
+					{ name: 'Get Database Table', value: 'getDatabaseTable', description: 'Retrieves the structure and data of a database table block', action: 'Get database table structure and data'},
 					{ name: 'Get Document ID by Path', value: 'getDocIdByPath', description: 'Finds the unique ID of a document by providing its folder-like path (e.g., /My Notes/Meeting Summary) within a notebook', action: 'Find the document id based on its human readable path h path'},
 					{ name: 'Get Document Path by ID', value: 'getDocPathById', description: 'Retrieves the human-readable folder-like path (e.g., /My Notes/Meeting Summary) for a document using its unique ID', action: 'Get the human readable path h path of a document by its id'},
 					{ name: 'Get Version', value: 'getVersion', description: 'Retrieves the current version number of your SiYuan application', action: 'Get the si yuan system version'},
 					{ name: 'Insert Block', value: 'insertBlock', description: 'Adds a new block of content (Markdown or HTML) either before or after an existing block, or as the first/last child of a parent block', action: 'Insert a markdown dom block relative to another block'},
+					{ name: 'Insert Database Row', value: 'insertDatabaseRow', description: 'Inserts a new row of data into a database table block', action: 'Insert a new row into a database table'},
 					{ name: 'List Documents in Notebook', value: 'listDocsInNotebook', description: 'Retrieves a list of all documents (including their titles and IDs) found directly within a specific notebook', action: 'List documents in notebook'},
 					{ name: 'List Files in Directory', value: 'listFilesInDir', description: 'Lists files and folders within a specified directory path under the SiYuan workspace (e.g., /data/notebook_id/, /assets/)', action: 'List files in directory'},
 					{ name: 'List Notebooks', value: 'listNotebooks', description: 'Retrieves a list of all your notebooks, showing their names and unique IDs', action: 'List notebooks'},
@@ -68,6 +72,7 @@ export class SiYuan implements INodeType {
 					{ name: 'Render Sprig Template', value: 'renderSprig', description: 'Processes a template string using SiYuan\'s built-in Sprig template functions (useful for dynamic text generation)', action: 'Render a template string using sprig functions'},
 					{ name: 'Set Block Attributes', value: 'setBlockAttrs', description: 'Adds or updates custom or built-in attributes (like title, alias, custom tags) for a specific block', action: 'Set attributes for a block by its ID'},
 					{ name: 'Update Block', value: 'updateBlock', description: 'Replaces the entire content of an existing block with new Markdown or HTML content', action: 'Update the content of a block by its ID'},
+					{ name: 'Update Database Row', value: 'updateDatabaseRow', description: 'Updates an existing row in a database table block with new data', action: 'Update a row in a database table'},
 				],
 				default: 'createDoc', // Default remains the same
 
@@ -190,6 +195,101 @@ export class SiYuan implements INodeType {
 				description: 'The unique ID of the specific block (paragraph, list, image, or even a whole document) you want to affect',
 			},
 
+			// == Database Operations ==
+			{
+				displayName: 'Table Block ID',
+				name: 'tableBlockId',
+				type: 'string',
+				required: true,
+				default: '',
+				displayOptions: { show: { operation: ['insertDatabaseRow', 'updateDatabaseRow', 'deleteDatabaseRow', 'getDatabaseTable'] } },
+				description: 'The unique ID of the database table block you want to work with',
+			},
+			{
+				displayName: 'Columns',
+				name: 'columns',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				required: true,
+				default: {},
+				displayOptions: { show: { operation: ['createDatabaseTable'] } },
+				description: 'Define the columns for the database table',
+				options: [
+					{
+						name: 'columnValues',
+						displayName: 'Column',
+						values: [
+							{
+								displayName: 'Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+								description: 'The name of the column',
+							},
+							{
+								displayName: 'Type',
+								name: 'type',
+								type: 'options',
+								options: [
+									{ name: 'Text', value: 'text' },
+									{ name: 'Number', value: 'number' },
+									{ name: 'Date', value: 'date' },
+									{ name: 'Select', value: 'select' },
+									{ name: 'Multi-Select', value: 'multiSelect' },
+									{ name: 'Checkbox', value: 'checkbox' },
+									{ name: 'URL', value: 'url' },
+									{ name: 'Email', value: 'email' },
+									{ name: 'Phone', value: 'phone' },
+								],
+								default: 'text',
+								description: 'The data type of the column',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Row Data',
+				name: 'rowData',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				required: true,
+				default: {},
+				displayOptions: { show: { operation: ['insertDatabaseRow', 'updateDatabaseRow'] } },
+				description: 'Define the data for the row (key-value pairs)',
+				options: [
+					{
+						name: 'dataValues',
+						displayName: 'Data',
+						values: [
+							{
+								displayName: 'Column Name',
+								name: 'columnName',
+								type: 'string',
+								default: '',
+								description: 'The name of the column',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								default: '',
+								description: 'The value for this column',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Row Index',
+				name: 'rowIndex',
+				type: 'number',
+				required: true,
+				default: 0,
+				displayOptions: { show: { operation: ['updateDatabaseRow', 'deleteDatabaseRow'] } },
+				description: 'The index of the row to update or delete (0-based, excluding header row)',
+			},
+
 			// == Append/Prepend/Insert Block ==
 			{
 				displayName: 'Parent Block ID',
@@ -197,7 +297,7 @@ export class SiYuan implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				displayOptions: { show: { operation: ['appendBlock', 'prependBlock', 'insertBlock'] } },
+				displayOptions: { show: { operation: ['appendBlock', 'prependBlock', 'insertBlock', 'createDatabaseTable'] } },
 				description: 'The unique ID of the block (often a document or a list) inside which you want to add the new content',
 			},
 			// == Append/Prepend/Insert/Update Block ==
@@ -493,6 +593,62 @@ export class SiYuan implements INodeType {
 						const message = this.getNodeParameter('message', itemIndex) as string;
 						const timeout = this.getNodeParameter('timeout', itemIndex) as number;
 						result = await client.pushErrMsg(message, timeout);
+						break;
+					}
+
+					// --- Database Operations ---
+					case 'createDatabaseTable': {
+						const parentBlockId = this.getNodeParameter('parentBlockId', itemIndex) as string;
+						const columnsRaw = this.getNodeParameter('columns', itemIndex) as { columnValues: Array<{ name: string; type: string }> };
+						const columns: any[] = [];
+						if (columnsRaw.columnValues) {
+							for (const col of columnsRaw.columnValues) {
+								if (col.name) {
+									columns.push({ name: col.name, type: col.type });
+								}
+							}
+						}
+						result = await client.createDatabaseTable(parentBlockId, columns);
+						break;
+					}
+					case 'insertDatabaseRow': {
+						const tableBlockId = this.getNodeParameter('tableBlockId', itemIndex) as string;
+						const rowDataRaw = this.getNodeParameter('rowData', itemIndex) as { dataValues: Array<{ columnName: string; value: string }> };
+						const rowData: Record<string, any> = {};
+						if (rowDataRaw.dataValues) {
+							for (const data of rowDataRaw.dataValues) {
+								if (data.columnName) {
+									rowData[data.columnName] = data.value;
+								}
+							}
+						}
+						result = await client.insertDatabaseRow(tableBlockId, rowData);
+						break;
+					}
+					case 'updateDatabaseRow': {
+						const tableBlockId = this.getNodeParameter('tableBlockId', itemIndex) as string;
+						const rowIndex = this.getNodeParameter('rowIndex', itemIndex) as number;
+						const rowDataRaw = this.getNodeParameter('rowData', itemIndex) as { dataValues: Array<{ columnName: string; value: string }> };
+						const rowData: Record<string, any> = {};
+						if (rowDataRaw.dataValues) {
+							for (const data of rowDataRaw.dataValues) {
+								if (data.columnName) {
+									rowData[data.columnName] = data.value;
+								}
+							}
+						}
+						result = await client.updateDatabaseRow(tableBlockId, rowIndex, rowData);
+						break;
+					}
+					case 'deleteDatabaseRow': {
+						const tableBlockId = this.getNodeParameter('tableBlockId', itemIndex) as string;
+						const rowIndex = this.getNodeParameter('rowIndex', itemIndex) as number;
+						result = await client.deleteDatabaseRow(tableBlockId, rowIndex);
+						break;
+					}
+					case 'getDatabaseTable': {
+						const tableBlockId = this.getNodeParameter('tableBlockId', itemIndex) as string;
+						result = await client.getDatabaseTable(tableBlockId);
 						break;
 					}
 

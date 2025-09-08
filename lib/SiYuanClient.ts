@@ -175,6 +175,138 @@ export class SiYuanClient {
 		return this.request<any[]>('/api/query/sql', { stmt });
 	}
 
+	// --- Database Operations ---
+
+	/**
+	 * Creates a database table block in SiYuan
+	 * @param parentID The parent block ID where the database table should be created
+	 * @param columns Array of column definitions for the database table
+	 * @returns The created database block information
+	 */
+	async createDatabaseTable(parentID: string, columns: DatabaseColumn[]): Promise<any> {
+		// Create the database table structure using Markdown table syntax
+		const headerRow = '| ' + columns.map(col => col.name).join(' | ') + ' |';
+		const separatorRow = '| ' + columns.map(() => '---').join(' | ') + ' |';
+		const tableMarkdown = headerRow + '\n' + separatorRow;
+
+		return this.appendBlock(parentID, tableMarkdown, 'markdown');
+	}
+
+	/**
+	 * Inserts a new row into a database table block
+	 * @param tableBlockId The ID of the table block
+	 * @param rowData Object containing the data for the new row
+	 * @returns The result of the insert operation
+	 */
+	async insertDatabaseRow(tableBlockId: string, rowData: Record<string, any>): Promise<any> {
+		// Get the current table content
+		const tableContent = await this.getBlockKramdown(tableBlockId);
+
+		// Parse the table and add the new row
+		const lines = tableContent.kramdown.split('\n');
+		const dataRow = '| ' + Object.values(rowData).join(' | ') + ' |';
+
+		// Add the new row to the table
+		const updatedContent = lines.join('\n') + '\n' + dataRow;
+
+		return this.updateBlock(tableBlockId, updatedContent, 'markdown');
+	}
+
+	/**
+	 * Updates a row in a database table block
+	 * @param tableBlockId The ID of the table block
+	 * @param rowIndex The index of the row to update (0-based, excluding header)
+	 * @param rowData Object containing the updated data for the row
+	 * @returns The result of the update operation
+	 */
+	async updateDatabaseRow(tableBlockId: string, rowIndex: number, rowData: Record<string, any>): Promise<any> {
+		// Get the current table content
+		const tableContent = await this.getBlockKramdown(tableBlockId);
+
+		// Parse the table and update the specified row
+		const lines = tableContent.kramdown.split('\n');
+		const dataRow = '| ' + Object.values(rowData).join(' | ') + ' |';
+
+		// Update the row (skip header and separator rows, so add 2 to rowIndex)
+		if (lines.length > rowIndex + 2) {
+			lines[rowIndex + 2] = dataRow;
+			const updatedContent = lines.join('\n');
+			return this.updateBlock(tableBlockId, updatedContent, 'markdown');
+		} else {
+			throw new Error(`Row index ${rowIndex} is out of bounds for the table`);
+		}
+	}
+
+	/**
+	 * Deletes a row from a database table block
+	 * @param tableBlockId The ID of the table block
+	 * @param rowIndex The index of the row to delete (0-based, excluding header)
+	 * @returns The result of the delete operation
+	 */
+	async deleteDatabaseRow(tableBlockId: string, rowIndex: number): Promise<any> {
+		// Get the current table content
+		const tableContent = await this.getBlockKramdown(tableBlockId);
+
+		// Parse the table and remove the specified row
+		const lines = tableContent.kramdown.split('\n');
+
+		// Check if the row index is valid (skip header and separator rows, so add 2 to rowIndex)
+		const actualRowIndex = rowIndex + 2;
+		if (lines.length <= actualRowIndex || actualRowIndex < 2) {
+			throw new Error(`Row index ${rowIndex} is out of bounds for the table`);
+		}
+
+		// Remove the row
+		lines.splice(actualRowIndex, 1);
+		const updatedContent = lines.join('\n');
+
+		return this.updateBlock(tableBlockId, updatedContent, 'markdown');
+	}
+
+	/**
+	 * Queries a database table using SQL
+	 * @param query SQL query to execute
+	 * @returns Query results
+	 */
+	async queryDatabase(query: string): Promise<any[]> {
+		return this.sqlQuery(query);
+	}
+
+	/**
+	 * Gets database table structure and data
+	 * @param tableBlockId The ID of the table block
+	 * @returns Table structure and data
+	 */
+	async getDatabaseTable(tableBlockId: string): Promise<DatabaseTableInfo> {
+		const tableContent = await this.getBlockKramdown(tableBlockId);
+		const lines = tableContent.kramdown.split('\n').filter(line => line.trim());
+
+		if (lines.length < 2) {
+			throw new Error('Invalid table format');
+		}
+
+		// Parse header row to get column names
+		const headerRow = lines[0];
+		const columns = headerRow.split('|').slice(1, -1).map(col => col.trim());
+
+		// Parse data rows (skip header and separator)
+		const rows: Record<string, any>[] = [];
+		for (let i = 2; i < lines.length; i++) {
+			const rowData = lines[i].split('|').slice(1, -1).map(cell => cell.trim());
+			const rowObject: Record<string, any> = {};
+			columns.forEach((col, index) => {
+				rowObject[col] = rowData[index] || '';
+			});
+			rows.push(rowObject);
+		}
+
+		return {
+			id: tableBlockId,
+			columns: columns.map(name => ({ name, type: 'text' })),
+			rows
+		};
+	}
+
 	// --- Template Operations ---
 
 	async renderSprig(template: string): Promise<string> {
@@ -307,4 +439,15 @@ export interface SiYuanChildBlockInfo {
 export interface ExportedDocMd {
 	hPath: string;
 	content: string;
+}
+
+export interface DatabaseColumn {
+	name: string;
+	type: 'text' | 'number' | 'date' | 'select' | 'multiSelect' | 'checkbox' | 'url' | 'email' | 'phone';
+}
+
+export interface DatabaseTableInfo {
+	id: string;
+	columns: DatabaseColumn[];
+	rows: Record<string, any>[];
 }
