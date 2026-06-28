@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-siyuan",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "n8n community nodes for SiYuan — manage notebooks, documents, blocks, tags, assets, and search. Includes AI Tool nodes for use with n8n AI agents and a Trigger node for real-time events.",
   "keywords": [
     "n8n-community-node-package",

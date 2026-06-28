@@ -16,7 +16,15 @@ import type {
 	AttributeViewKeyType,
 	RenderedAttributeView,
 	DatabaseBlockLocator,
+	DatabaseFieldInput,
 } from './interfaces';
+
+/** SiYuan's default page size for /api/av/renderAttributeView rows. */
+const DEFAULT_PAGE_SIZE = 50;
+/** Page size used when paging through all rows of a database (issue #24). */
+const ALL_ROWS_PAGE_SIZE = 100;
+/** Safety cap on total rows fetched by renderDatabaseAllRows to avoid runaway paging. */
+const MAX_ALL_ROWS = 100000;
 
 /** Generate a SiYuan-style ID: YYYYMMDDhhmmss-{7 lowercase alnum}. */
 function siyuanId(): string {
@@ -1070,8 +1078,17 @@ export class SiYuanClient {
 		return { blockID: newBlockID, avID, rootID, parentID: parentBlockID, name };
 	}
 
-	/** Renders a database (AttributeView) — returns name, columns, rows, viewID/type. */
-	async renderDatabase(avID: string): Promise<RenderedAttributeView> {
+	/**
+	 * Renders a single page of a database (AttributeView). SiYuan paginates
+	 * `/api/av/renderAttributeView` (default page size 50); `rowCount` always reports the true
+	 * total regardless of the page returned. Issue #24: requesting without page/pageSize only
+	 * ever yields the first 50 rows — use renderDatabaseAllRows to fetch every row.
+	 */
+	async renderDatabasePage(
+		avID: string,
+		page = 1,
+		pageSize = DEFAULT_PAGE_SIZE,
+	): Promise<RenderedAttributeView> {
 		const data = await this.request<{
 			id: string;
 			name: string;
@@ -1098,7 +1115,7 @@ export class SiYuanClient {
 				}>;
 				rowCount: number;
 			};
-		}>('/api/av/renderAttributeView', { id: avID });
+		}>('/api/av/renderAttributeView', { id: avID, page, pageSize });
 
 		return {
 			id: data.id,
@@ -1126,13 +1143,51 @@ export class SiYuanClient {
 		};
 	}
 
-	/** Adds a row (detached block) to a database. Returns the new row ID. */
+	/**
+	 * Renders the first page of a database — sufficient for schema lookups and single-row cell
+	 * resolution. Back-compatible default; use renderDatabaseAllRows when every row is needed.
+	 */
+	async renderDatabase(avID: string): Promise<RenderedAttributeView> {
+		return this.renderDatabasePage(avID, 1, DEFAULT_PAGE_SIZE);
+	}
+
+	/**
+	 * Renders a database fetching ALL rows by paging through to `rowCount` (issue #24: Get
+	 * previously returned at most 50 rows because only the first page was requested). The
+	 * returned view carries the full row set; columns/name/etc come from the first page.
+	 */
+	async renderDatabaseAllRows(avID: string): Promise<RenderedAttributeView> {
+		const first = await this.renderDatabasePage(avID, 1, ALL_ROWS_PAGE_SIZE);
+		const rows = [...first.rows];
+		let page = 1;
+		while (rows.length < first.rowCount && rows.length < MAX_ALL_ROWS) {
+			page++;
+			const next = await this.renderDatabasePage(avID, page, ALL_ROWS_PAGE_SIZE);
+			if (next.rows.length === 0) break;
+			rows.push(...next.rows);
+		}
+		return { ...first, rows };
+	}
+
+	/**
+	 * Adds a row (detached block) to a database and, optionally, sets its fields in a single
+	 * batch call. Returns the new row ID and the number of fields written.
+	 *
+	 * Performance (issue #25): the previous version rendered the whole view before AND after the
+	 * insert and then issued one render per field (via setDatabaseCell) — 3 + N renders per row,
+	 * each of which SiYuan rebuilds server-side, so per-row cost grew with both table size and
+	 * field count. This version keeps the robust before/after row-discovery diff (two bounded
+	 * single-page renders, so a custom view sort can never misattribute fields to the wrong row)
+	 * but collapses every field write into one batchSetAttributeViewBlockAttrs call — per-row
+	 * cost is now flat in the number of fields.
+	 */
 	async addDatabaseRow(
 		avID: string,
 		databaseBlockID: string,
 		primaryContent = '',
-	): Promise<{ rowID: string }> {
-		const before = await this.renderDatabase(avID);
+		fields: DatabaseFieldInput[] = [],
+	): Promise<{ rowID: string; fieldsSet: number }> {
+		const before = await this.renderDatabasePage(avID, 1, DEFAULT_PAGE_SIZE);
 		const existingRowIDs = new Set(before.rows.map((r) => r.id));
 
 		await this.request<null>('/api/av/addAttributeViewBlocks', {
@@ -1141,12 +1196,81 @@ export class SiYuanClient {
 			srcs: [{ id: siyuanId(), isDetached: true, content: primaryContent }],
 		});
 
-		const after = await this.renderDatabase(avID);
+		const after = await this.renderDatabasePage(avID, 1, DEFAULT_PAGE_SIZE);
 		const newRow = after.rows.find((r) => !existingRowIDs.has(r.id));
 		if (!newRow) {
 			throw new Error('Row was added but could not be located on re-render.');
 		}
-		return { rowID: newRow.id };
+
+		const fieldsSet = await this.applyBatchFields(avID, after.columns, newRow, fields);
+		return { rowID: newRow.id, fieldsSet };
+	}
+
+	/**
+	 * Updates fields on an existing row in a single batch call. Searches all rows (issue #24
+	 * pagination) so it works for rows beyond the first page, then writes every field via one
+	 * batchSetAttributeViewBlockAttrs call. Returns the number of fields written.
+	 */
+	async updateDatabaseRow(
+		avID: string,
+		rowID: string,
+		fields: DatabaseFieldInput[],
+	): Promise<{ fieldsSet: number }> {
+		const view = await this.renderDatabaseAllRows(avID);
+		const row = view.rows.find((r) => r.id === rowID);
+		if (!row) {
+			throw new Error(`Row ${rowID} not found in database ${avID}.`);
+		}
+		const fieldsSet = await this.applyBatchFields(avID, view.columns, row, fields);
+		return { fieldsSet };
+	}
+
+	/**
+	 * Resolves a list of field inputs against the rendered columns and the target row, builds
+	 * the typed cell values, and writes them all in one batchSetAttributeViewBlockAttrs call.
+	 * Returns the number of cells written (0 — a no-op — when there are no fields). Throws a
+	 * helpful error naming the available columns when a name or key ID does not resolve.
+	 */
+	private async applyBatchFields(
+		avID: string,
+		columns: RenderedAttributeView['columns'],
+		row: RenderedAttributeView['rows'][number],
+		fields: DatabaseFieldInput[],
+	): Promise<number> {
+		if (!fields || fields.length === 0) return 0;
+
+		const byId = new Map(columns.map((c) => [c.id, c]));
+		const byName = new Map(columns.map((c) => [c.name, c]));
+
+		const values = fields.map((f) => {
+			let column;
+			if (f.keyId) {
+				column = byId.get(f.keyId);
+				if (!column) {
+					throw new Error(
+						`Column id "${f.keyId}" not found in database. Existing column ids: ${[...byId.keys()].join(', ')}`,
+					);
+				}
+			} else {
+				column = byName.get(f.columnName as string);
+				if (!column) {
+					throw new Error(
+						`Column "${f.columnName}" not found in database. Existing columns: ${[...byName.keys()].join(', ')}`,
+					);
+				}
+			}
+			const cell = row.cells.find((c) => c.keyID === column!.id);
+			const cellID = cell ? cell.id : siyuanId();
+			return {
+				keyID: column.id,
+				rowID: row.id,
+				cellID,
+				value: buildCellValue(cellID, column.id, row.id, column.type, f.value),
+			};
+		});
+
+		await this.request<unknown>('/api/av/batchSetAttributeViewBlockAttrs', { avID, values });
+		return values.length;
 	}
 
 	/** Removes one or more rows from a database. */

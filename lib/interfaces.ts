@@ -166,6 +166,16 @@ export interface RenderedAttributeView {
 	rowCount: number;
 }
 
+/**
+ * A field to write into a database row. Resolve the target column either by its key
+ * (column) ID (`keyId`, takes precedence) or by its display name (`columnName`).
+ */
+export interface DatabaseFieldInput {
+	keyId?: string;
+	columnName?: string;
+	value: unknown;
+}
+
 /** Locator for a database block in the workspace. */
 export interface DatabaseBlockLocator {
 	blockID: string;

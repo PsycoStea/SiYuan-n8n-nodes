@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.6] - 2026-06-28
+
+### Fixed
+- **Database > Get now returns every row, not just the first 50.** SiYuan paginates `/api/av/renderAttributeView` (default page size 50) and the node only ever requested the first page, so Get silently capped at 50 rows. It now pages through to the view's true `rowCount` and returns all rows (in both Split and Single output modes). Closes #24.
+- **Notebook > Remove now reports whether the notebook actually existed.** SiYuan's `removeNotebook` is idempotent and returns success even when the notebook is already gone, so repeated deletes all looked like `{"success": true}`. Remove now pre-checks existence and returns `{ success, found, notebookId }` — `found: false` when the notebook was already removed. Closes #23.
+
+### Changed
+- **Database > Add Row / Update Row write all fields in one batched call (issue #25).** Setting fields previously issued one `renderAttributeView` call *per field*; they are now collapsed into a single `batchSetAttributeViewBlockAttrs` call. In a benchmark, a 6-field insert into a ~100-row table dropped from ~130 ms to ~61 ms per row (~2×); the more fields per row, the larger the saving. The two row-discovery renders remain, so per-row time still creeps up gradually with total table size (measured ~38 → ~49 ms/row from ~50 to ~230 rows) — reduced, not eliminated. Update Row also now finds rows beyond the first 50 (it pages through all rows). No change to inputs or outputs.
+
 ## [2.1.5] - 2026-06-12
 
 ### Fixed

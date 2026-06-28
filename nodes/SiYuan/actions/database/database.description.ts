@@ -28,7 +28,7 @@ export const databaseOperations: INodeProperties = {
 		{
 			name: 'Get',
 			value: 'get',
-			description: 'Get the full schema and rows of a database',
+			description: 'Get the full schema and all rows of a database (pages through every row)',
 			action: 'Get a database',
 		},
 		{

@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /**
- * Integration test for the v2.1.1 fixes (issues #9, #10, #12) against a live SiYuan kernel.
+ * Integration test for the database resource (issues #9, #10, #12, #14, #16, #17, #24)
+ * against a live SiYuan kernel.
  *
  * Usage:
  *   SIYUAN_URL=http://10.0.0.101:6806 SIYUAN_TOKEN=... pnpm tsx tests/integration/database.test.ts
@@ -440,6 +441,65 @@ async function main() {
 			);
 		}
 		assert(updThrew, 'threw on unknown column in updateRow');
+
+		// -------------------------------------------------------------------
+		// Issue #24 — Get must return ALL rows, not just the first page of 50
+		// -------------------------------------------------------------------
+		console.log('\n→ #24: count rows before bulk-adding past the 50-row page cap');
+		const before24 = (await handleDatabaseOperation(
+			client,
+			'get',
+			makeCtx({ avId, getOutputMode: 'split', getFilter: '' }) as any,
+			0,
+		)) as Array<Record<string, unknown>>;
+		const baseCount = before24.length;
+		// Add enough rows so the total comfortably exceeds one 50-row page.
+		const TARGET_EXTRA = 50;
+		const expectedTotal = baseCount + TARGET_EXTRA;
+		for (let i = 0; i < TARGET_EXTRA; i++) {
+			await handleDatabaseOperation(
+				client,
+				'addRow',
+				makeCtx({
+					avId,
+					databaseBlockId: dbBlockId,
+					primaryKeyContent: `Bulk ${i}`,
+					fieldsMode: 'byNameAndValue',
+					'fieldsByNameAndValue.field': [{ columnName: 'Count', value: String(1000 + i) }],
+				}) as any,
+				0,
+			);
+		}
+		await new Promise((r) => setTimeout(r, 1000));
+
+		console.log(`\n→ #24: get split returns every row (>50; expecting ${expectedTotal})`);
+		const allRows = (await handleDatabaseOperation(
+			client,
+			'get',
+			makeCtx({ avId, getOutputMode: 'split', getFilter: '' }) as any,
+			0,
+		)) as Array<Record<string, unknown>>;
+		assert(expectedTotal > 50, 'test fixture exceeds one page', expectedTotal);
+		assert(
+			allRows.length === expectedTotal,
+			`all ${expectedTotal} rows returned (got ${allRows.length}; capped at 50 before #24)`,
+			allRows.length,
+		);
+
+		console.log('\n→ #24: get single reports the true rowCount');
+		const allSingle = (await handleDatabaseOperation(
+			client,
+			'get',
+			makeCtx({ avId, getOutputMode: 'single', getFilter: '' }) as any,
+			0,
+		)) as Record<string, unknown>;
+		assert((allSingle.rows as unknown[]).length === expectedTotal, `single mode carries all ${expectedTotal} rows`, (allSingle.rows as unknown[]).length);
+		assert(allSingle.rowCount === expectedTotal, `rowCount === ${expectedTotal}`, allSingle.rowCount);
+
+		console.log('\n→ #24: a row from a later page is reachable + its batched field is correct');
+		const bulk49 = allRows.find((r) => r.Count === 1049);
+		assert(!!bulk49, 'row with Count=1049 (the 50th bulk row) is present in the full result', allRows.length);
+		assert(bulk49?.['Primary Key'] === 'Bulk 49', 'that row carries its primary content', bulk49);
 	} finally {
 		console.log(`\n→ cleanup: removing notebook ${notebookId}`);
 		try {

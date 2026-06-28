@@ -1,6 +1,10 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { SiYuanClient, extractTypedCellValue } from '../../../../lib/SiYuanClient';
-import type { AttributeViewKeyType, RenderedAttributeView } from '../../../../lib/interfaces';
+import type {
+	AttributeViewKeyType,
+	DatabaseFieldInput,
+	RenderedAttributeView,
+} from '../../../../lib/interfaces';
 
 /** Build a flat {column-name → value} record for one row plus tracing metadata. */
 function flattenRow(
@@ -45,56 +49,29 @@ function applyFilter(rows: Record<string, unknown>[], filter: Record<string, unk
 type FieldsMode = 'byNameAndValue' | 'byColumnName' | 'byKeyId';
 
 /**
- * Resolve a list of column-name + value pairs into key-ID + value pairs by
- * looking up the AV schema once. Throws with a helpful message when a name
- * doesn't exist so users learn the correct spelling.
- */
-async function resolvePairsByName(
-	client: SiYuanClient,
-	avId: string,
-	rows: Array<{ columnName: string; value: unknown }>,
-): Promise<Array<{ keyId: string; value: unknown }>> {
-	if (rows.length === 0) return [];
-	const view = await client.renderDatabase(avId);
-	const byName = new Map(view.columns.map((c) => [c.name, c.id]));
-	return rows.map((r) => {
-		const keyId = byName.get(r.columnName);
-		if (!keyId) {
-			throw new Error(
-				`Column "${r.columnName}" not found in database. Existing columns: ${[...byName.keys()].join(', ')}`,
-			);
-		}
-		return { keyId, value: r.value };
-	});
-}
-
-/**
- * Read the user's field input for the selected mode and resolve everything to
- * `{ keyId, value }` pairs ready for setDatabaseCell.
+ * Read the user's field input for the selected mode into a list of `DatabaseFieldInput`
+ * pairs. This does NO API calls — column-name → key-ID resolution and cell writes happen
+ * once, batched, inside the client (addDatabaseRow / updateDatabaseRow), so a row write
+ * costs a fixed number of renders regardless of how many fields are set (issue #25).
  *
- * - `byNameAndValue` — fixedCollection of {columnName,value} rows. The
- *   recommended default; sidesteps JSON quoting entirely so n8n expressions
- *   work in plain string fields (issue #16).
- * - `byColumnName` — JSON object {"Name": value, ...}. Useful for users who
- *   compute the payload in a Code/Function node.
+ * - `byNameAndValue` — fixedCollection of {columnName,value} rows. The recommended default;
+ *   sidesteps JSON quoting entirely so n8n expressions work in plain string fields (issue #16).
+ * - `byColumnName` — JSON object {"Name": value, ...}. Useful for payloads computed in a
+ *   Code/Function node.
  * - `byKeyId` — fixedCollection of {keyId,value} rows. Power-user mode.
  */
-async function collectFieldPairs(
-	client: SiYuanClient,
+function collectRawFieldPairs(
 	ctx: IExecuteFunctions,
 	itemIndex: number,
-	avId: string,
 	fieldsMode: FieldsMode,
-): Promise<Array<{ keyId: string; value: unknown }>> {
+): DatabaseFieldInput[] {
 	if (fieldsMode === 'byKeyId') {
 		const raw = ctx.getNodeParameter(
 			'fieldsByKeyId.field',
 			itemIndex,
 			[],
 		) as Array<{ keyId: string; value: string }>;
-		return raw
-			.filter((r) => r && r.keyId)
-			.map((r) => ({ keyId: r.keyId, value: r.value }));
+		return raw.filter((r) => r && r.keyId).map((r) => ({ keyId: r.keyId, value: r.value }));
 	}
 
 	if (fieldsMode === 'byNameAndValue') {
@@ -103,10 +80,9 @@ async function collectFieldPairs(
 			itemIndex,
 			[],
 		) as Array<{ columnName: string; value: string }>;
-		const rows = raw
+		return raw
 			.filter((r) => r && r.columnName)
 			.map((r) => ({ columnName: r.columnName, value: r.value }));
-		return resolvePairsByName(client, avId, rows);
 	}
 
 	// byColumnName — JSON object input.
@@ -125,21 +101,7 @@ async function collectFieldPairs(
 	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
 		throw new Error('Fields JSON must be an object {"Column Name": value}.');
 	}
-	const rows = Object.entries(parsed).map(([columnName, value]) => ({ columnName, value }));
-	return resolvePairsByName(client, avId, rows);
-}
-
-/** Apply a list of {keyId, value} pairs as cell updates. Returns the number applied. */
-async function applyCellUpdates(
-	client: SiYuanClient,
-	avId: string,
-	rowID: string,
-	pairs: Array<{ keyId: string; value: unknown }>,
-): Promise<number> {
-	for (const { keyId, value } of pairs) {
-		await client.setDatabaseCell(avId, rowID, keyId, value);
-	}
-	return pairs.length;
+	return Object.entries(parsed).map(([columnName, value]) => ({ columnName, value }));
 }
 
 export async function handleDatabaseOperation(
@@ -200,7 +162,8 @@ export async function handleDatabaseOperation(
 				}
 			}
 
-			const view = await client.renderDatabase(avId);
+			// Issue #24: fetch every row, not just the first page (SiYuan paginates at 50).
+			const view = await client.renderDatabaseAllRows(avId);
 			const flatRows = view.rows.map((r) => flattenRow(view, r));
 			const filteredRows = applyFilter(flatRows, filter);
 
@@ -238,12 +201,15 @@ export async function handleDatabaseOperation(
 				? databaseBlockIdRaw.trim()
 				: await client.getBlockIdByAvId(avId);
 			const primaryContent = ctx.getNodeParameter('primaryKeyContent', itemIndex, '') as string;
-
-			const { rowID } = await client.addDatabaseRow(avId, databaseBlockId, primaryContent);
-
 			const fieldsMode = ctx.getNodeParameter('fieldsMode', itemIndex, 'byNameAndValue') as FieldsMode;
-			const pairs = await collectFieldPairs(client, ctx, itemIndex, avId, fieldsMode);
-			const fieldsSet = await applyCellUpdates(client, avId, rowID, pairs);
+			const fields: DatabaseFieldInput[] = collectRawFieldPairs(ctx, itemIndex, fieldsMode);
+
+			const { rowID, fieldsSet } = await client.addDatabaseRow(
+				avId,
+				databaseBlockId,
+				primaryContent,
+				fields,
+			);
 
 			return {
 				avID: avId,
@@ -258,8 +224,8 @@ export async function handleDatabaseOperation(
 			const avId = ctx.getNodeParameter('avId', itemIndex) as string;
 			const rowId = ctx.getNodeParameter('rowId', itemIndex) as string;
 			const fieldsMode = ctx.getNodeParameter('fieldsMode', itemIndex, 'byNameAndValue') as FieldsMode;
-			const pairs = await collectFieldPairs(client, ctx, itemIndex, avId, fieldsMode);
-			const fieldsSet = await applyCellUpdates(client, avId, rowId, pairs);
+			const fields: DatabaseFieldInput[] = collectRawFieldPairs(ctx, itemIndex, fieldsMode);
+			const { fieldsSet } = await client.updateDatabaseRow(avId, rowId, fields);
 			return { avID: avId, rowID: rowId, fieldsSet };
 		}
 
