@@ -26,6 +26,36 @@ const ALL_ROWS_PAGE_SIZE = 100;
 /** Safety cap on total rows fetched by renderDatabaseAllRows to avoid runaway paging. */
 const MAX_ALL_ROWS = 100000;
 
+/**
+ * One rendered view instance from /api/av/renderAttributeView. The response's top-level `view`
+ * is one of these, and — when the view is grouped — so is every entry in its `groups[]` array
+ * (SiYuan reuses the same Table structure for both). Group instances have `columns` nulled and
+ * carry the rows; the parent has `rows` emptied and keeps the columns. See renderDatabasePage.
+ */
+interface RenderedViewInstance {
+	id: string;
+	name: string;
+	columns?: Array<{
+		id: string;
+		name: string;
+		type: string;
+		icon: string;
+		hidden: boolean;
+		desc: string;
+	}> | null;
+	rows?: Array<{
+		id: string;
+		cells: Array<{
+			id: string;
+			value: { keyID: string; type: string } & Record<string, unknown>;
+			valueType: string;
+		}>;
+	}> | null;
+	rowCount: number;
+	/** Non-zero when the group is hidden in the UI (1 = empty-hidden, 2 = manually hidden). */
+	groupHidden?: number;
+}
+
 /** Generate a SiYuan-style ID: YYYYMMDDhhmmss-{7 lowercase alnum}. */
 function siyuanId(): string {
 	const now = new Date();
@@ -1083,6 +1113,13 @@ export class SiYuanClient {
 	 * `/api/av/renderAttributeView` (default page size 50); `rowCount` always reports the true
 	 * total regardless of the page returned. Issue #24: requesting without page/pageSize only
 	 * ever yields the first 50 rows — use renderDatabaseAllRows to fetch every row.
+	 *
+	 * Grouped views (issue #26): when the view is grouped, SiYuan moves every row into
+	 * `view.groups[]` and deliberately empties the top-level `view.rows` ("将总的视图上的项目清空,
+	 * 减少冗余" — SetItems(nil) in kernel/model/attribute_view_render.go), while leaving
+	 * `view.rowCount` at the full total. A caller reading `view.rows` therefore sees nothing at
+	 * all. We flatten the groups back into a single row list so every consumer — Get, Update Row,
+	 * Set Cell — behaves identically whether or not the user has grouped their view.
 	 */
 	async renderDatabasePage(
 		avID: string,
@@ -1094,35 +1131,24 @@ export class SiYuanClient {
 			name: string;
 			viewID: string;
 			viewType: string;
-			view: {
-				id: string;
-				name: string;
-				columns: Array<{
-					id: string;
-					name: string;
-					type: string;
-					icon: string;
-					hidden: boolean;
-					desc: string;
-				}>;
-				rows: Array<{
-					id: string;
-					cells: Array<{
-						id: string;
-						value: { keyID: string; type: string } & Record<string, unknown>;
-						valueType: string;
-					}>;
-				}>;
-				rowCount: number;
-			};
+			view: RenderedViewInstance & { groups?: RenderedViewInstance[] };
 		}>('/api/av/renderAttributeView', { id: avID, page, pageSize });
+
+		// Grouped view: rows live in the group instances. Groups hidden by the user (groupHidden
+		// is 1 for auto-hidden-empty, 2 for manually hidden) still carry real rows, so they are
+		// included — hiding a group in the UI must not make its rows invisible to a workflow.
+		const groups = data.view.groups;
+		const grouped = Array.isArray(groups) && groups.length > 0;
+		const rawRows = grouped ? groups.flatMap((g) => g.rows ?? []) : (data.view.rows ?? []);
 
 		return {
 			id: data.id,
 			name: data.name,
 			viewID: data.viewID,
 			viewType: data.viewType,
-			columns: data.view.columns.map((c) => ({
+			// Group instances carry `columns: null` — SiYuan keeps column metadata only on the
+			// parent view ("将分组视图的分组字段清空，减少冗余"), so always read it from there.
+			columns: (data.view.columns ?? []).map((c) => ({
 				id: c.id,
 				name: c.name,
 				type: c.type,
@@ -1130,9 +1156,9 @@ export class SiYuanClient {
 				hidden: c.hidden,
 				desc: c.desc,
 			})),
-			rows: data.view.rows.map((r) => ({
+			rows: rawRows.map((r) => ({
 				id: r.id,
-				cells: r.cells.map((cell) => ({
+				cells: (r.cells ?? []).map((cell) => ({
 					id: cell.id,
 					keyID: cell.value.keyID,
 					valueType: cell.valueType,
@@ -1140,6 +1166,7 @@ export class SiYuanClient {
 				})),
 			})),
 			rowCount: data.view.rowCount,
+			grouped,
 		};
 	}
 
@@ -1152,12 +1179,26 @@ export class SiYuanClient {
 	}
 
 	/**
-	 * Renders a database fetching ALL rows by paging through to `rowCount` (issue #24: Get
-	 * previously returned at most 50 rows because only the first page was requested). The
-	 * returned view carries the full row set; columns/name/etc come from the first page.
+	 * Renders a database fetching ALL rows by paging through the view (issue #24: Get previously
+	 * returned at most 50 rows because only the first page was requested). The returned view
+	 * carries the full row set; columns/name/etc come from the first page.
+	 *
+	 * A grouped view (issue #26) must never be paged. Each group paginates independently against
+	 * the same page/pageSize, so a request for page 2 does not mean "the next 100 rows" — and on
+	 * SiYuan 3.6.5 it makes the kernel return an empty response body, which surfaces as an opaque
+	 * "Unknown error" from /api/av/renderAttributeView. Instead we ask for page 1 sized to the
+	 * whole view: no single group can hold more rows than the view itself, so a pageSize of
+	 * `rowCount` is guaranteed to return every group in full in one request.
 	 */
 	async renderDatabaseAllRows(avID: string): Promise<RenderedAttributeView> {
 		const first = await this.renderDatabasePage(avID, 1, ALL_ROWS_PAGE_SIZE);
+
+		if (first.grouped) {
+			if (first.rows.length >= first.rowCount) return first;
+			const pageSize = Math.min(Math.max(first.rowCount, ALL_ROWS_PAGE_SIZE), MAX_ALL_ROWS);
+			return this.renderDatabasePage(avID, 1, pageSize);
+		}
+
 		const rows = [...first.rows];
 		let page = 1;
 		while (rows.length < first.rowCount && rows.length < MAX_ALL_ROWS) {
@@ -1173,13 +1214,24 @@ export class SiYuanClient {
 	 * Adds a row (detached block) to a database and, optionally, sets its fields in a single
 	 * batch call. Returns the new row ID and the number of fields written.
 	 *
-	 * Performance (issue #25): the previous version rendered the whole view before AND after the
-	 * insert and then issued one render per field (via setDatabaseCell) — 3 + N renders per row,
-	 * each of which SiYuan rebuilds server-side, so per-row cost grew with both table size and
-	 * field count. This version keeps the robust before/after row-discovery diff (two bounded
-	 * single-page renders, so a custom view sort can never misattribute fields to the wrong row)
-	 * but collapses every field write into one batchSetAttributeViewBlockAttrs call — per-row
-	 * cost is now flat in the number of fields.
+	 * The row ID is chosen client-side and handed to SiYuan as `srcs[].itemID`, so it is known
+	 * before the call returns. Earlier versions could not do this: they generated an ID, passed it
+	 * as `srcs[].id` — which SiYuan reads only for *attached* rows, never for detached ones — and
+	 * then rediscovered the row by diffing page 1 of the view before and after the insert. That
+	 * diff only held for an unsorted, ungrouped view under one page in size. Grouping broke it
+	 * outright (issue #26): a grouped render returns no top-level rows at all, so the diff found
+	 * nothing and threw "Row was added but could not be located on re-render." — after the row had
+	 * already been created, leaving it behind with none of its fields set. Naming the ID up front
+	 * is also strictly stronger than the old diff against a custom view *sort*, the case issue #25
+	 * kept the diff for: fields can no longer be attributed to the wrong row under any view
+	 * configuration — sorted, grouped, filtered or paginated.
+	 *
+	 * Performance (issue #25): field writes are collapsed into one batchSetAttributeViewBlockAttrs
+	 * call, so per-row cost is flat in the number of fields. Dropping both discovery renders makes
+	 * it flat in table size too — the residual creep #25 could only reduce, not eliminate.
+	 *
+	 * `srcs[].itemID` requires SiYuan >= 3.3.0; `id` is sent alongside it purely as a harmless
+	 * no-op for older kernels, which fall back to a server-generated ID.
 	 */
 	async addDatabaseRow(
 		avID: string,
@@ -1187,23 +1239,30 @@ export class SiYuanClient {
 		primaryContent = '',
 		fields: DatabaseFieldInput[] = [],
 	): Promise<{ rowID: string; fieldsSet: number }> {
-		const before = await this.renderDatabasePage(avID, 1, DEFAULT_PAGE_SIZE);
-		const existingRowIDs = new Set(before.rows.map((r) => r.id));
+		const rowID = siyuanId();
 
 		await this.request<null>('/api/av/addAttributeViewBlocks', {
 			avID,
 			blockID: databaseBlockID,
-			srcs: [{ id: siyuanId(), isDetached: true, content: primaryContent }],
+			srcs: [{ itemID: rowID, id: rowID, isDetached: true, content: primaryContent }],
 		});
 
-		const after = await this.renderDatabasePage(avID, 1, DEFAULT_PAGE_SIZE);
-		const newRow = after.rows.find((r) => !existingRowIDs.has(r.id));
-		if (!newRow) {
-			throw new Error('Row was added but could not be located on re-render.');
+		if (!fields || fields.length === 0) {
+			return { rowID, fieldsSet: 0 };
 		}
 
-		const fieldsSet = await this.applyBatchFields(avID, after.columns, newRow, fields);
-		return { rowID: newRow.id, fieldsSet };
+		// Only the column metadata is needed to resolve field names to key IDs; the new row's
+		// cells do not have to be read back. batchSetAttributeViewBlockAttrs resolves an existing
+		// value by (keyID, itemID) and never by the cell ID we supply, so applyBatchFields can
+		// mint fresh cell IDs for a brand-new row without risking duplicate or dropped values.
+		const schema = await this.renderDatabasePage(avID, 1, 1);
+		const fieldsSet = await this.applyBatchFields(
+			avID,
+			schema.columns,
+			{ id: rowID, cells: [] },
+			fields,
+		);
+		return { rowID, fieldsSet };
 	}
 
 	/**
@@ -1263,6 +1322,14 @@ export class SiYuanClient {
 			const cellID = cell ? cell.id : siyuanId();
 			return {
 				keyID: column.id,
+				// `rowID` was renamed to `itemID` upstream (siyuan-note/siyuan#15727, 3.7.0) and
+				// became a hard error on 3.7.2+; older kernels only understand `rowID`. SiYuan
+				// checks `itemID` first and falls through to `rowID`, so sending both is correct
+				// on every version. The nested value's `blockID` must carry the same item ID:
+				// 3.6.5 writes the payload's fields through verbatim and has no missing-item
+				// guard, so an inconsistent ID silently stores an orphan value and still
+				// returns code 0.
+				itemID: row.id,
 				rowID: row.id,
 				cellID,
 				value: buildCellValue(cellID, column.id, row.id, column.type, f.value),

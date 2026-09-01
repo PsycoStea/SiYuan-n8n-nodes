@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /**
- * Integration test for the database resource (issues #9, #10, #12, #14, #16, #17, #24)
+ * Integration test for the database resource (issues #9, #10, #12, #14, #16, #17, #24, #26)
  * against a live SiYuan kernel.
  *
  * Usage:
@@ -500,6 +500,190 @@ async function main() {
 		const bulk49 = allRows.find((r) => r.Count === 1049);
 		assert(!!bulk49, 'row with Count=1049 (the 50th bulk row) is present in the full result', allRows.length);
 		assert(bulk49?.['Primary Key'] === 'Bulk 49', 'that row carries its primary content', bulk49);
+
+		// -------------------------------------------------------------------
+		// Issue #26 — grouped views. A grouped render moves every row into
+		// view.groups[] and empties view.rows while leaving rowCount at the full
+		// total, which used to make Add Row throw, Get return nothing, and
+		// Update Row report the row as missing.
+		// -------------------------------------------------------------------
+		console.log('\n→ #26: fresh database for grouping');
+		const gCreate = (await handleDatabaseOperation(
+			client,
+			'create',
+			makeCtx({ parentBlockId: docId }) as any,
+			0,
+		)) as Record<string, unknown>;
+		const gAvId = gCreate.avID as string;
+		const gBlockId = gCreate.blockID as string;
+
+		const gCol = (await handleDatabaseOperation(
+			client,
+			'addColumn',
+			makeCtx({ avId: gAvId, columnName: 'Status', columnType: 'select' }) as any,
+			0,
+		)) as Record<string, string>;
+		assert(!!gCol.keyID, 'Status column created', gCol);
+
+		for (const [content, status] of [['G-One', 'Alpha'], ['G-Two', 'Beta'], ['G-Three', 'Alpha']]) {
+			await handleDatabaseOperation(
+				client,
+				'addRow',
+				makeCtx({
+					avId: gAvId,
+					databaseBlockId: gBlockId,
+					primaryKeyContent: content,
+					fieldsMode: 'byColumnName',
+					fieldsByColumnName: JSON.stringify({ Status: status }),
+				}) as any,
+				0,
+			);
+		}
+
+		console.log('\n→ #26: group the view by Status');
+		const groupRes = await fetch(`${url}/api/av/setAttrViewGroup`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Authorization: `Token ${token}` },
+			body: JSON.stringify({
+				avID: gAvId,
+				blockID: gBlockId,
+				group: { field: gCol.keyID, method: 0, order: 0, hideEmpty: false },
+			}),
+		}).then((r) => r.json() as Promise<{ code: number; msg: string }>);
+		assert(groupRes.code === 0, 'setAttrViewGroup succeeded', groupRes);
+
+		// The mechanism itself, straight from the kernel — not just the symptom.
+		console.log('\n→ #26: raw grouped render has empty rows but a non-zero rowCount');
+		const rawGrouped = await fetch(`${url}/api/av/renderAttributeView`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Authorization: `Token ${token}` },
+			body: JSON.stringify({ id: gAvId, page: 1, pageSize: 50 }),
+		}).then((r) => r.json() as Promise<{ data: { view: Record<string, any> } }>);
+		const rawView = rawGrouped.data.view;
+		assert(Array.isArray(rawView.groups) && rawView.groups.length > 0, 'kernel returned groups[]', rawView.groups?.length);
+		assert((rawView.rows ?? []).length === 0, 'kernel emptied view.rows on the grouped view', rawView.rows);
+		assert(rawView.rowCount === 3, `kernel still reports rowCount=3 (got ${rawView.rowCount})`, rawView.rowCount);
+
+		console.log('\n→ #26: client flattens groups back into rows');
+		const flattened = await client.renderDatabaseAllRows(gAvId);
+		assert(flattened.rows.length === 3, `all 3 rows recovered from groups (got ${flattened.rows.length})`, flattened.rows.length);
+		assert(flattened.columns.length > 0, 'columns still resolved from the parent view', flattened.columns.length);
+
+		console.log('\n→ #26: addRow on a grouped view (threw before the fix)');
+		const gAdd = (await handleDatabaseOperation(
+			client,
+			'addRow',
+			makeCtx({
+				avId: gAvId,
+				databaseBlockId: gBlockId,
+				primaryKeyContent: 'G-Four',
+				fieldsMode: 'byColumnName',
+				fieldsByColumnName: JSON.stringify({ Status: 'Gamma' }),
+			}) as any,
+			0,
+		)) as Record<string, unknown>;
+		assert(typeof gAdd.rowID === 'string' && (gAdd.rowID as string).length > 0, 'addRow returned a rowID', gAdd);
+		assert(gAdd.fieldsSet === 1, 'one field written', gAdd);
+
+		// code 0 is not proof the write landed on the right item — read it back.
+		console.log('\n→ #26: the new row is readable and carries its field');
+		const afterAdd = await client.renderDatabaseAllRows(gAvId);
+		const added = afterAdd.rows.find((r) => r.id === gAdd.rowID);
+		assert(!!added, 'the returned rowID resolves to a real row', gAdd.rowID);
+		assert(afterAdd.rows.length === 4, `grouped view now has 4 rows (got ${afterAdd.rows.length})`, afterAdd.rows.length);
+
+		console.log('\n→ #26: get on a grouped view returns every row (returned 0 before the fix)');
+		const gGet = (await handleDatabaseOperation(
+			client,
+			'get',
+			makeCtx({ avId: gAvId, getOutputMode: 'split', getFilter: '' }) as any,
+			0,
+		)) as Array<Record<string, unknown>>;
+		assert(gGet.length === 4, `get returned all 4 rows (got ${gGet.length})`, gGet.length);
+		const gFour = gGet.find((r) => r['Primary Key'] === 'G-Four');
+		assert(gFour?.Status === 'Gamma', 'the added row carries Status=Gamma', gFour);
+
+		console.log('\n→ #26: updateRow on a grouped view (threw "not found" before the fix)');
+		const gUpd = (await handleDatabaseOperation(
+			client,
+			'updateRow',
+			makeCtx({
+				avId: gAvId,
+				rowId: gAdd.rowID as string,
+				fieldsMode: 'byColumnName',
+				fieldsByColumnName: JSON.stringify({ Status: 'Delta' }),
+			}) as any,
+			0,
+		)) as Record<string, unknown>;
+		assert(gUpd.fieldsSet === 1, 'updateRow wrote one field', gUpd);
+		const gGet2 = (await handleDatabaseOperation(
+			client,
+			'get',
+			makeCtx({ avId: gAvId, getOutputMode: 'split', getFilter: '' }) as any,
+			0,
+		)) as Array<Record<string, unknown>>;
+		assert(
+			gGet2.find((r) => r['Primary Key'] === 'G-Four')?.Status === 'Delta',
+			'the update landed on the right row',
+			gGet2.find((r) => r['Primary Key'] === 'G-Four'),
+		);
+
+		// A grouped view larger than one page is the case that must not be paged: asking the
+		// kernel for page 2 of a grouped view returns an empty body ("Unknown error").
+		console.log('\n→ #26: grouped view larger than one page (>100 rows) is not paged');
+		const bigCreate = (await handleDatabaseOperation(
+			client,
+			'create',
+			makeCtx({ parentBlockId: docId }) as any,
+			0,
+		)) as Record<string, unknown>;
+		const bAvId = bigCreate.avID as string;
+		const bBlockId = bigCreate.blockID as string;
+		const bCol = (await handleDatabaseOperation(
+			client,
+			'addColumn',
+			makeCtx({ avId: bAvId, columnName: 'Bucket', columnType: 'select' }) as any,
+			0,
+		)) as Record<string, string>;
+		const bigTotal = 130;
+		for (let i = 0; i < bigTotal; i++) {
+			await client.addDatabaseRow(bAvId, bBlockId, `B-${i}`, [
+				{ columnName: 'Bucket', value: `Bucket ${i % 3}` },
+			]);
+		}
+		await fetch(`${url}/api/av/setAttrViewGroup`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Authorization: `Token ${token}` },
+			body: JSON.stringify({
+				avID: bAvId,
+				blockID: bBlockId,
+				group: { field: bCol.keyID, method: 0, order: 0, hideEmpty: false },
+			}),
+		}).then((r) => r.json());
+
+		try {
+			const bigAll = await client.renderDatabaseAllRows(bAvId);
+			assert(
+				bigAll.rows.length === bigTotal,
+				`all ${bigTotal} rows returned from a grouped view (got ${bigAll.rows.length})`,
+				bigAll.rows.length,
+			);
+			assert(bigAll.grouped === true, 'view reported as grouped', bigAll.grouped);
+		} catch (e) {
+			fail('renderDatabaseAllRows on a >1-page grouped view threw', (e as Error).message);
+		}
+
+		const bigGet = (await handleDatabaseOperation(
+			client,
+			'get',
+			makeCtx({ avId: bAvId, getOutputMode: 'single', getFilter: '' }) as any,
+			0,
+		)) as Record<string, unknown>;
+		assert(
+			(bigGet.rows as unknown[]).length === bigTotal,
+			`get returned all ${bigTotal} rows from the large grouped view`,
+			(bigGet.rows as unknown[]).length,
+		);
 	} finally {
 		console.log(`\n→ cleanup: removing notebook ${notebookId}`);
 		try {

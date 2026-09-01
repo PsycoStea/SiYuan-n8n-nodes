@@ -164,6 +164,12 @@ export interface RenderedAttributeView {
 	columns: AttributeViewColumn[];
 	rows: AttributeViewRow[];
 	rowCount: number;
+	/**
+	 * True when the source view was grouped, i.e. `rows` was reassembled from `view.groups[]`
+	 * rather than read from `view.rows`. Grouped views cannot be paged (issue #26), so callers
+	 * that page must branch on this.
+	 */
+	grouped: boolean;
 }
 
 /**

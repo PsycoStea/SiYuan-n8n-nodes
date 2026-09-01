@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.7] - 2026-09-01
+
+### Fixed
+- **Database operations now work on grouped views.** Adding a row to a database whose view is grouped by a field failed with `Row was added but could not be located on re-render.` — after the row had already been created, leaving it in the table with none of its fields set. When a view is grouped, SiYuan moves every row into `view.groups[]` and deliberately empties the top-level `view.rows` while still reporting the full `rowCount`, so the node's row-discovery step found nothing. The client now reassembles the grouped rows into a single list, so **Get**, **Update Row** and **Set Cell** work on grouped views too — previously Get failed outright on a grouped view (an opaque `Unknown error` from `renderAttributeView`, because a grouped view cannot be paged) and Update Row reported the row as not found. Thanks @sofa1780 for the report and for pointing at `srcs[].itemID`. Closes #26.
+- **Add Row no longer depends on where the view puts the new row.** The row ID is now chosen up front and passed to SiYuan as `srcs[].itemID` (SiYuan ≥ 3.3.0), instead of being rediscovered by diffing the first page of the view before and after the insert. Fields can no longer be attributed to the wrong row under any view configuration — sorted, grouped, filtered or paginated — which is a stronger guarantee than the diff it replaces.
+- **Compatibility with SiYuan ≥ 3.7.2.** Field writes sent the `rowID` parameter to `batchSetAttributeViewBlockAttrs`, which upstream renamed to `itemID` (siyuan-note/siyuan#15727, 3.7.0) and made a hard error in 3.7.2. Both keys are now sent, so Add Row / Update Row / Set Cell work across old and new kernels.
+
+### Changed
+- **Add Row is faster and no longer slows down as the table grows.** Dropping the two row-discovery renders removes the per-row cost that still scaled with table size after 2.1.6 (measured then at ~38 → ~49 ms/row between ~50 and ~230 rows). A row with no fields to set now costs a single API call. No change to inputs or outputs.
+
 ## [2.1.6] - 2026-06-28
 
 ### Fixed
