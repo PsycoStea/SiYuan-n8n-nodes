@@ -628,6 +628,31 @@ async function main() {
 			gGet2.find((r) => r['Primary Key'] === 'G-Four'),
 		);
 
+		console.log('\n→ #26: setCell on a grouped view (threw "not found" before the fix)');
+		const gSet = (await handleDatabaseOperation(
+			client,
+			'setCell',
+			makeCtx({
+				avId: gAvId,
+				rowId: gAdd.rowID as string,
+				keyId: gCol.keyID,
+				cellValue: 'Epsilon',
+			}) as any,
+			0,
+		)) as Record<string, unknown>;
+		assert(!!gSet, 'setCell returned a result', gSet);
+		const gGet3 = (await handleDatabaseOperation(
+			client,
+			'get',
+			makeCtx({ avId: gAvId, getOutputMode: 'split', getFilter: '' }) as any,
+			0,
+		)) as Array<Record<string, unknown>>;
+		assert(
+			gGet3.find((r) => r['Primary Key'] === 'G-Four')?.Status === 'Epsilon',
+			'setCell landed on the right row of the grouped view',
+			gGet3.find((r) => r['Primary Key'] === 'G-Four'),
+		);
+
 		// A grouped view larger than one page is the case that must not be paged: asking the
 		// kernel for page 2 of a grouped view returns an empty body ("Unknown error").
 		console.log('\n→ #26: grouped view larger than one page (>100 rows) is not paged');

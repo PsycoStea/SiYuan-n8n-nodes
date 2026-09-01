@@ -1380,7 +1380,9 @@ export class SiYuanClient {
 		keyID: string,
 		value: unknown,
 	): Promise<unknown> {
-		const view = await this.renderDatabase(avID);
+		// Searches all rows rather than just the first page, so this works for rows beyond page 1
+		// and on grouped views (issue #26), matching updateDatabaseRow.
+		const view = await this.renderDatabaseAllRows(avID);
 		const column = view.columns.find((c) => c.id === keyID);
 		if (!column) {
 			throw new Error(`Column ${keyID} not found in database ${avID}.`);
@@ -1398,6 +1400,10 @@ export class SiYuanClient {
 		return this.request<unknown>('/api/av/setAttributeViewBlockAttr', {
 			avID,
 			keyID,
+			// As in applyBatchFields, `rowID` is the deprecated spelling of `itemID`
+			// (siyuan-note/siyuan#15727). This endpoint rejects `rowID` from 3.7.0 — one release
+			// earlier than the batch variant — so sending both matters here too.
+			itemID: row.id,
 			rowID,
 			cellID: cell.id,
 			value: builtValue,
